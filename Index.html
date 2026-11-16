@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Pediatrics and Child Health Nursing Education and Service — College of Medicine and Health Sciences, Wollo University, Tertiary Care & Teaching Hospital Campus.">
-<title>Pediatrics &amp; Child Health Nursing — Wollo University</title>
+<title>PCHN — Pediatrics &amp; Child Health Nursing | Wollo University</title>
 
 <!--
   =============================================================================
@@ -26,19 +26,25 @@
   NOTE: the front end never stores passwords. Only a signed session token is
   kept in localStorage; it expires after 12 hours and is invalidated
   server-side when an account is deactivated or its password is reset.
+
+  NOTE: the QUALIFICATIONS / SPECIALTIES / RANKS / CURRENT_STATUSES arrays in
+  the script below must match the lists in code.gs exactly.
   =============================================================================
 -->
 
 <style>
   /* ============================== DESIGN TOKENS ========================== */
   :root{
-    --teal:#0e5f6e;
-    --teal-dark:#0a4653;
-    --teal-soft:#e6f2f4;
-    --ink:#12212b;
-    --muted:#4d6577;
-    --line:#d5e1e8;
-    --bg:#f4f8fa;
+    /* Violet brand palette */
+    --brand:#5b21b6;
+    --brand-dark:#3b0f7a;
+    --brand-mid:#7c3aed;
+    --brand-soft:#ede9fe;
+
+    --ink:#1b1630;
+    --muted:#5c5470;
+    --line:#ddd3ef;
+    --bg:#f4f0fb;            /* page background — soft violet */
     --white:#ffffff;
     --amber:#a3540a;
     --amber-soft:#fdf3e3;
@@ -46,9 +52,11 @@
     --red-soft:#fbeceb;
     --green:#1a6b3c;
     --green-soft:#e8f4ec;
+    --gold:#f0b429;
+
     --radius:12px;
     --radius-sm:8px;
-    --shadow:0 1px 2px rgba(16,42,56,.06), 0 10px 28px rgba(16,42,56,.08);
+    --shadow:0 1px 2px rgba(43,16,86,.07), 0 10px 28px rgba(43,16,86,.10);
     --font:"Segoe UI", "Noto Sans", system-ui, -apple-system, "Helvetica Neue", Arial,
            "Noto Sans Ethiopic", "Nyala", "Abyssinica SIL", sans-serif;
   }
@@ -70,19 +78,21 @@
 
   h1,h2,h3,h4{ line-height:1.25; margin:0 0 .5rem; font-weight:700; letter-spacing:-.01em; }
   p{ margin:0 0 1rem; }
-  a{ color:var(--teal); }
-  a:hover{ color:var(--teal-dark); }
+  a{ color:var(--brand); }
+  a:hover{ color:var(--brand-dark); }
 
   /* Visible, high-contrast focus ring everywhere (keyboard users) */
   :focus-visible{
-    outline:3px solid #0b6ea8;
+    outline:3px solid var(--brand-mid);
     outline-offset:2px;
     border-radius:4px;
   }
+  /* On the dark violet header, use the gold accent so the ring is visible */
+  .site-header :focus-visible{ outline-color:var(--gold); }
 
   .skip-link{
     position:absolute; left:-9999px; top:0; z-index:999;
-    background:var(--white); color:var(--teal-dark);
+    background:var(--white); color:var(--brand-dark);
     padding:.75rem 1.25rem; border-radius:0 0 var(--radius-sm) 0;
     font-weight:700; box-shadow:var(--shadow);
   }
@@ -92,10 +102,10 @@
 
   /* ============================== HEADER ================================ */
   .site-header{
-    background:linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 62%, #12798c 100%);
+    background:linear-gradient(135deg, #2c0a5e 0%, var(--brand) 62%, var(--brand-mid) 100%);
     color:#fff;
     padding:1.5rem 0 1.1rem;
-    border-bottom:4px solid #f0b429;
+    border-bottom:4px solid var(--gold);
   }
 
   .header-inner{
@@ -105,21 +115,38 @@
 
   .brand{ display:flex; gap:1rem; align-items:flex-start; flex:1 1 620px; min-width:0; }
 
+  /* Logo tile: heart-with-pulse icon + PCHN wordmark */
   .brand-mark{
     flex:none;
-    width:58px; height:58px; border-radius:14px;
+    display:inline-flex;
+    align-items:center;
+    gap:.45rem;
+    padding:.45rem .8rem;
+    border-radius:14px;
     background:rgba(255,255,255,.14);
-    border:1.5px solid rgba(255,255,255,.4);
-    display:grid; place-items:center;
-    font-weight:800; font-size:.92rem; letter-spacing:.06em;
+    border:1.5px solid rgba(255,255,255,.42);
     color:#fff;
+  }
+
+  .brand-icon{
+    width:22px; height:22px;
+    display:block;
+    flex:none;
+    color:#ffd98a;
+  }
+
+  .brand-letters{
+    font-weight:800;
+    font-size:.95rem;
+    letter-spacing:.10em;
+    line-height:1;
   }
 
   .eyebrow{
     margin:0 0 .3rem;
     font-size:.78rem; font-weight:700;
     letter-spacing:.14em; text-transform:uppercase;
-    color:#bfe6ee;
+    color:#d9c9fb;
   }
 
   .site-title{
@@ -136,8 +163,8 @@
     margin-top:.25rem;
     font-size:.98em;
     font-weight:600;
-    color:#e9f7fa;
-    /* Ethriopic-capable stack is inherited, but be explicit for safety */
+    color:#efe7ff;
+    /* Ethiopic-capable stack is inherited, but be explicit for safety */
     font-family:"Noto Sans Ethiopic", "Nyala", "Abyssinica SIL", "Ebrima", var(--font);
   }
 
@@ -149,8 +176,8 @@
     appearance:none;
     font:inherit; font-weight:600; font-size:.9rem;
     color:#fff;
-    background:rgba(255,255,255,.10);
-    border:1.5px solid rgba(255,255,255,.30);
+    background:rgba(255,255,255,.12);
+    border:1.5px solid rgba(255,255,255,.34);
     padding:.5rem .9rem;
     border-radius:999px;
     text-decoration:none;
@@ -158,8 +185,8 @@
     transition:background .15s ease, border-color .15s ease;
   }
   .site-nav a:hover,
-  .site-nav button:hover{ background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.65); color:#fff; }
-  .site-nav a[aria-current="page"]{ background:#fff; color:var(--teal-dark); border-color:#fff; }
+  .site-nav button:hover{ background:rgba(255,255,255,.24); border-color:rgba(255,255,255,.7); color:#fff; }
+  .site-nav a[aria-current="page"]{ background:#fff; color:var(--brand-dark); border-color:#fff; }
 
   /* ============================== LAYOUT ================================ */
   main{ padding:2.25rem 0 3.5rem; }
@@ -174,12 +201,7 @@
     padding:1.75rem;
   }
 
-  .grid-2{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
-    gap:1.5rem;
-    align-items:start;
-  }
+  .stack > * + *{ margin-top:1.75rem; }
 
   /* ============================== HERO ================================== */
   .hero{
@@ -195,7 +217,7 @@
   .hero::before{
     content:"";
     position:absolute; inset:0 0 auto 0; height:5px;
-    background:linear-gradient(90deg, var(--teal), #12798c 55%, #f0b429);
+    background:linear-gradient(90deg, var(--brand), var(--brand-mid) 55%, var(--gold));
   }
   .hero h2{ font-size:clamp(1.35rem, 2.8vw, 1.9rem); }
   .hero p{ color:var(--muted); max-width:68ch; font-size:1.03rem; }
@@ -217,21 +239,21 @@
   .btn:active{ transform:translateY(1px); }
   .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
 
-  .btn-primary{ background:var(--teal); color:#fff; }
-  .btn-primary:hover{ background:var(--teal-dark); color:#fff; }
+  .btn-primary{ background:var(--brand); color:#fff; }
+  .btn-primary:hover{ background:var(--brand-dark); color:#fff; }
 
-  .btn-outline{ background:var(--white); color:var(--teal-dark); border-color:var(--line); }
-  .btn-outline:hover{ background:var(--teal-soft); border-color:var(--teal); color:var(--teal-dark); }
+  .btn-outline{ background:var(--white); color:var(--brand-dark); border-color:var(--line); }
+  .btn-outline:hover{ background:var(--brand-soft); border-color:var(--brand); color:var(--brand-dark); }
 
   .btn-danger{ background:var(--white); color:var(--red); border-color:#f0cdca; }
   .btn-danger:hover{ background:var(--red-soft); }
 
   .btn-ghost{
-    background:transparent; color:var(--teal-dark);
+    background:transparent; color:var(--brand-dark);
     border-color:transparent; padding:.35rem .6rem; font-size:.85rem;
     text-decoration:underline;
   }
-  .btn-ghost:hover{ background:var(--teal-soft); }
+  .btn-ghost:hover{ background:var(--brand-soft); }
 
   .btn-sm{ padding:.35rem .7rem; font-size:.82rem; border-radius:6px; }
 
@@ -246,7 +268,7 @@
     display:block;
     font-weight:600; font-size:.88rem;
     margin-bottom:.3rem;
-    color:#1c3644;
+    color:#2a2044;
   }
 
   .req{ color:var(--red); margin-left:.15rem; }
@@ -265,16 +287,27 @@
     color:var(--ink);
     background:var(--white);
     padding:.62rem .75rem;
-    border:1.5px solid #b9cbd6;
+    border:1.5px solid #c3b6dd;
     border-radius:var(--radius-sm);
     transition:border-color .15s ease, box-shadow .15s ease;
   }
 
-  input::placeholder{ color:#8ba0ae; }
+  /* Native dropdowns render with a consistent chevron on all platforms */
+  select{
+    appearance:none;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b21b6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right .65rem center;
+    background-size:16px 16px;
+    padding-right:2.2rem;
+    cursor:pointer;
+  }
+
+  input::placeholder{ color:#9a90b0; }
 
   input:focus, select:focus, textarea:focus{
-    border-color:var(--teal);
-    box-shadow:0 0 0 3px rgba(14,95,110,.16);
+    border-color:var(--brand);
+    box-shadow:0 0 0 3px rgba(124,58,237,.18);
     outline:none;
   }
 
@@ -302,7 +335,7 @@
   .form-status[hidden]{ display:none; }
   .form-status.is-error{ background:var(--red-soft); border-color:#f0cdca; color:var(--red); }
   .form-status.is-ok{ background:var(--green-soft); border-color:#bfe0cc; color:var(--green); }
-  .form-status.is-info{ background:var(--teal-soft); border-color:#bfe0e6; color:var(--teal-dark); }
+  .form-status.is-info{ background:var(--brand-soft); border-color:#d3c6f5; color:var(--brand-dark); }
 
   .form-foot{
     margin-top:1.2rem; padding-top:1rem;
@@ -324,12 +357,12 @@
   .card{
     background:var(--white);
     border:1px solid var(--line);
-    border-left:5px solid var(--teal);
+    border-left:5px solid var(--brand);
     border-radius:var(--radius);
     padding:1.25rem 1.35rem;
     box-shadow:var(--shadow);
   }
-  .card h3{ font-size:1rem; color:var(--teal-dark); margin-bottom:.4rem; }
+  .card h3{ font-size:1rem; color:var(--brand-dark); margin-bottom:.4rem; }
   .card p{ margin:0; font-size:.92rem; color:var(--muted); }
 
   /* ============================== STATS ================================= */
@@ -354,7 +387,7 @@
     margin-bottom:.25rem;
   }
   .stat .stat-value{
-    font-size:1.55rem; font-weight:800; color:var(--teal-dark);
+    font-size:1.55rem; font-weight:800; color:var(--brand-dark);
     font-variant-numeric:tabular-nums;
   }
 
@@ -373,8 +406,8 @@
 
   thead th{
     text-align:left;
-    background:#eef4f7;
-    color:#1c3644;
+    background:#f2edfc;
+    color:#2a2044;
     font-size:.74rem; font-weight:700;
     letter-spacing:.07em; text-transform:uppercase;
     padding:.65rem .8rem;
@@ -384,15 +417,27 @@
 
   tbody td{
     padding:.65rem .8rem;
-    border-bottom:1px solid #eaf1f5;
+    border-bottom:1px solid #f0ebfa;
     vertical-align:middle;
   }
   tbody tr:last-child td{ border-bottom:0; }
-  tbody tr:hover{ background:#f7fbfc; }
+  tbody tr:hover{ background:#faf7ff; }
 
   .cell-empty{ color:var(--muted); font-style:italic; text-align:center; padding:1.75rem .8rem !important; }
 
   .mono{ font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size:.86em; }
+
+  /* Inline dropdown used in the admin staff table */
+  .inline-select{
+    font:inherit; font-size:.82rem;
+    padding:.28rem .5rem;
+    border:1.5px solid #c3b6dd;
+    border-radius:6px;
+    background-color:var(--white);
+    color:var(--ink);
+    min-width:124px;
+    cursor:pointer;
+  }
 
   /* ============================== BADGES ================================ */
   .badge{
@@ -405,10 +450,12 @@
     white-space:nowrap;
   }
   .badge-unused{ background:var(--green-soft); color:var(--green); border-color:#bfe0cc; }
-  .badge-used{ background:#eef4f7; color:var(--muted); border-color:var(--line); }
+  .badge-used{ background:#f2edfc; color:var(--muted); border-color:var(--line); }
   .badge-revoked{ background:var(--red-soft); color:var(--red); border-color:#f0cdca; }
   .badge-active{ background:var(--green-soft); color:var(--green); border-color:#bfe0cc; }
   .badge-deactivated{ background:var(--amber-soft); color:var(--amber); border-color:#f0dcb8; }
+  .badge-duty{ background:var(--brand-soft); color:var(--brand-dark); border-color:#d3c6f5; }
+  .badge-study{ background:#e7f1fb; color:#1b4f88; border-color:#c6ddf3; }
 
   /* ============================== CODE CHIPS ============================ */
   .code-list{
@@ -416,9 +463,9 @@
     margin:1rem 0 0; padding:0; list-style:none;
   }
   .code-list li{
-    background:var(--teal-soft);
-    border:1.5px dashed #a9cfd7;
-    color:var(--teal-dark);
+    background:var(--brand-soft);
+    border:1.5px dashed #b9a4ea;
+    color:var(--brand-dark);
     padding:.35rem .7rem;
     border-radius:6px;
     font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
@@ -427,8 +474,6 @@
   }
 
   /* ============================== SECTIONS ============================== */
-  .stack > * + *{ margin-top:1.75rem; }
-
   .section-head{
     display:flex; flex-wrap:wrap; gap:.75rem;
     align-items:center; justify-content:space-between;
@@ -453,8 +498,8 @@
 
   /* ============================== FOOTER ================================ */
   .site-footer{
-    background:var(--teal-dark);
-    color:#cfe6eb;
+    background:var(--brand-dark);
+    color:#dcd2f5;
     padding:1.75rem 0;
     font-size:.86rem;
   }
@@ -489,7 +534,16 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <div class="brand">
-      <div class="brand-mark" aria-hidden="true">PCN</div>
+      <!-- Logo: heart-with-pulse icon + PCHN wordmark (inline SVG, no assets) -->
+      <div class="brand-mark" aria-hidden="true">
+        <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          <path d="M6.6 12h2.3l1.2-2.2 1.9 4.4 1.4-2.6.7.4h2.3"/>
+        </svg>
+        <span class="brand-letters">PCHN</span>
+      </div>
+
       <div>
         <p class="eyebrow">College of Medicine and Health Sciences · Wollo University</p>
         <h1 class="site-title">
@@ -598,23 +652,60 @@
 
           <div class="field">
             <label for="reg-qualification">Educational qualification <span class="req" aria-hidden="true">*</span></label>
-            <input type="text" id="reg-qualification" name="qualification" required maxlength="80"
-                   placeholder="e.g. MSc in Pediatric Nursing">
+            <select id="reg-qualification" name="qualification" required>
+              <option value="">Select…</option>
+              <option value="Diploma">Diploma</option>
+              <option value="BSc">BSc</option>
+              <option value="MSc">MSc</option>
+              <option value="MPH">MPH</option>
+              <option value="PhD">PhD</option>
+              <option value="Other">Other</option>
+            </select>
+            <span class="hint">Choose “Other” if your qualification is not listed.</span>
             <p class="field-error" data-error-for="qualification" hidden></p>
           </div>
 
           <div class="field">
             <label for="reg-specialty">Specialty <span class="req" aria-hidden="true">*</span></label>
-            <input type="text" id="reg-specialty" name="specialty" required maxlength="80"
-                   placeholder="e.g. Neonatal Nursing">
+            <select id="reg-specialty" name="specialty" required>
+              <option value="">Select…</option>
+              <option value="Pediatric Nursing">Pediatric Nursing</option>
+              <option value="Neonatal Nursing">Neonatal Nursing</option>
+              <option value="Child Health Nursing">Child Health Nursing</option>
+              <option value="Pediatric Critical Care">Pediatric Critical Care</option>
+              <option value="Pediatric Oncology">Pediatric Oncology</option>
+              <option value="Community &amp; Public Health">Community &amp; Public Health</option>
+              <option value="Other">Other</option>
+            </select>
             <p class="field-error" data-error-for="specialty" hidden></p>
           </div>
 
           <div class="field">
             <label for="reg-rank">Professional rank <span class="req" aria-hidden="true">*</span></label>
-            <input type="text" id="reg-rank" name="rank" required maxlength="60"
-                   placeholder="e.g. Lecturer, Senior Nurse, Assistant Professor">
+            <select id="reg-rank" name="rank" required>
+              <option value="">Select…</option>
+              <option value="Graduate Nurse">Graduate Nurse</option>
+              <option value="Staff Nurse">Staff Nurse</option>
+              <option value="Senior Nurse">Senior Nurse</option>
+              <option value="Head Nurse">Head Nurse</option>
+              <option value="Lecturer">Lecturer</option>
+              <option value="Assistant Professor">Assistant Professor</option>
+              <option value="Associate Professor">Associate Professor</option>
+              <option value="Professor">Professor</option>
+              <option value="Other">Other</option>
+            </select>
             <p class="field-error" data-error-for="rank" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-currentStatus">Current status <span class="req" aria-hidden="true">*</span></label>
+            <select id="reg-currentStatus" name="currentStatus" required>
+              <option value="">Select…</option>
+              <option value="On Duty">On Duty</option>
+              <option value="Study Leave">Study Leave</option>
+            </select>
+            <span class="hint">The administrator can update this later as your situation changes.</span>
+            <p class="field-error" data-error-for="currentStatus" hidden></p>
           </div>
 
           <div class="field">
@@ -643,7 +734,7 @@
             <label for="reg-registrationCode">Registration code <span class="req" aria-hidden="true">*</span></label>
             <input type="text" id="reg-registrationCode" name="registrationCode" required
                    maxlength="24" autocapitalize="characters" spellcheck="false"
-                   class="mono" placeholder="PCN-XXXX-XXXX">
+                   class="mono" placeholder="PCHN-XXXX-XXXX">
             <span class="hint">Issued by the unit administrator. Case is not important.</span>
             <p class="field-error" data-error-for="registrationCode" hidden></p>
           </div>
@@ -834,6 +925,8 @@
             <div class="stat"><span class="stat-label">Staff total</span><span class="stat-value" data-stat="staff.total">—</span></div>
             <div class="stat"><span class="stat-label">Active</span><span class="stat-value" data-stat="staff.active">—</span></div>
             <div class="stat"><span class="stat-label">Deactivated</span><span class="stat-value" data-stat="staff.deactivated">—</span></div>
+            <div class="stat"><span class="stat-label">On duty</span><span class="stat-value" data-stat="staff.onDuty">—</span></div>
+            <div class="stat"><span class="stat-label">Study leave</span><span class="stat-value" data-stat="staff.studyLeave">—</span></div>
             <div class="stat"><span class="stat-label">Codes total</span><span class="stat-value" data-stat="codes.total">—</span></div>
             <div class="stat"><span class="stat-label">Unused</span><span class="stat-value" data-stat="codes.unused">—</span></div>
             <div class="stat"><span class="stat-label">Used</span><span class="stat-value" data-stat="codes.used">—</span></div>
@@ -902,7 +995,7 @@
         <div class="panel">
           <div class="table-toolbar">
             <h3>Staff records</h3>
-            <input type="search" id="staff-search" placeholder="Search name, email, specialty…" aria-label="Search staff records">
+            <input type="search" id="staff-search" placeholder="Search name, email, specialty, status…" aria-label="Search staff records">
           </div>
           <div class="table-scroll">
             <table>
@@ -914,12 +1007,13 @@
                   <th scope="col">Phone</th>
                   <th scope="col">Rank</th>
                   <th scope="col">Employment</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">Current status</th>
+                  <th scope="col">Account</th>
                   <th scope="col">Actions</th>
                 </tr>
               </thead>
               <tbody id="staff-body">
-                <tr><td class="cell-empty" colspan="7">Loading…</td></tr>
+                <tr><td class="cell-empty" colspan="8">Loading…</td></tr>
               </tbody>
             </table>
           </div>
@@ -951,10 +1045,26 @@ const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE";
 /* ========================================================================== */
 
 
+/* =============================================================================
+ * Controlled vocabularies — MUST match the arrays in code.gs.
+ * ========================================================================== */
+const QUALIFICATIONS = ["Diploma", "BSc", "MSc", "MPH", "PhD", "Other"];
+const SPECIALTIES = [
+  "Pediatric Nursing", "Neonatal Nursing", "Child Health Nursing",
+  "Pediatric Critical Care", "Pediatric Oncology",
+  "Community & Public Health", "Other"
+];
+const RANKS = [
+  "Graduate Nurse", "Staff Nurse", "Senior Nurse", "Head Nurse",
+  "Lecturer", "Assistant Professor", "Associate Professor", "Professor", "Other"
+];
+const CURRENT_STATUSES = ["On Duty", "Study Leave"];
+
+
 /* ============================== STATE ==================================== */
 const state = {
-  token: localStorage.getItem("pcn_token") || "",
-  role: localStorage.getItem("pcn_role") || "",   // "staff" | "admin"
+  token: localStorage.getItem("pchn_token") || "",
+  role: localStorage.getItem("pchn_role") || "",   // "staff" | "admin"
   staff: null,
   codes: [],
   staffList: [],
@@ -1030,19 +1140,14 @@ function applyFieldErrors(form, errors) {
 
 /* Clear an individual field's error as soon as the user edits it. */
 function wireLiveFieldErrors(form) {
-  form.addEventListener("input", function (e) {
-    const t = e.target;
-    if (!t.name) return;
-    t.removeAttribute("aria-invalid");
-    const box = form.querySelector('[data-error-for="' + t.name + '"]');
-    if (box) { box.textContent = ""; box.hidden = true; }
-  });
-  form.addEventListener("change", function (e) {
-    const t = e.target;
-    if (!t.name) return;
-    t.removeAttribute("aria-invalid");
-    const box = form.querySelector('[data-error-for="' + t.name + '"]');
-    if (box) { box.textContent = ""; box.hidden = true; }
+  ["input", "change"].forEach(function (evt) {
+    form.addEventListener(evt, function (e) {
+      const t = e.target;
+      if (!t.name) return;
+      t.removeAttribute("aria-invalid");
+      const box = form.querySelector('[data-error-for="' + t.name + '"]');
+      if (box) { box.textContent = ""; box.hidden = true; }
+    });
   });
 }
 
@@ -1143,8 +1248,8 @@ function routeFromHash() {
 function saveSession(token, role) {
   state.token = token;
   state.role = role;
-  localStorage.setItem("pcn_token", token);
-  localStorage.setItem("pcn_role", role);
+  localStorage.setItem("pchn_token", token);
+  localStorage.setItem("pchn_role", role);
   $("#nav-signout").hidden = false;
 }
 
@@ -1152,8 +1257,8 @@ function clearSession() {
   state.token = "";
   state.role = "";
   state.staff = null;
-  localStorage.removeItem("pcn_token");
-  localStorage.removeItem("pcn_role");
+  localStorage.removeItem("pchn_token");
+  localStorage.removeItem("pchn_role");
   $("#nav-signout").hidden = true;
 }
 
@@ -1203,10 +1308,11 @@ function initRegisterForm() {
     const v = {
       fullName: form.fullName.value.trim(),
       sex: form.sex.value,
-      qualification: form.qualification.value.trim(),
-      specialty: form.specialty.value.trim(),
-      rank: form.rank.value.trim(),
+      qualification: form.qualification.value,
+      specialty: form.specialty.value,
+      rank: form.rank.value,
       employmentType: form.employmentType.value,
+      currentStatus: form.currentStatus.value,
       publicationUrl: form.publicationUrl.value.trim(),
       email: form.email.value.trim().toLowerCase(),
       phone: form.phone.value.trim(),
@@ -1217,11 +1323,12 @@ function initRegisterForm() {
     /* ---- client-side checks ---- */
     const errors = {};
     if (v.fullName.length < 3 || v.fullName.length > 80) errors.fullName = "Enter your full name (3–80 characters).";
-    if (!v.sex) errors.sex = "Select your sex.";
-    if (v.qualification.length < 2) errors.qualification = "Enter your educational qualification.";
-    if (v.specialty.length < 2) errors.specialty = "Enter your specialty.";
-    if (!v.rank) errors.rank = "Enter your professional rank.";
-    if (!v.employmentType) errors.employmentType = "Select Permanent or Guest.";
+    if (["Male", "Female"].indexOf(v.sex) === -1) errors.sex = "Select your sex.";
+    if (QUALIFICATIONS.indexOf(v.qualification) === -1) errors.qualification = "Select your educational qualification from the list.";
+    if (SPECIALTIES.indexOf(v.specialty) === -1) errors.specialty = "Select your specialty from the list.";
+    if (RANKS.indexOf(v.rank) === -1) errors.rank = "Select your professional rank from the list.";
+    if (["Permanent", "Guest"].indexOf(v.employmentType) === -1) errors.employmentType = "Select Permanent or Guest.";
+    if (CURRENT_STATUSES.indexOf(v.currentStatus) === -1) errors.currentStatus = "Select your current status (On Duty or Study Leave).";
     if (!isUrl(v.publicationUrl)) errors.publicationUrl = "Enter a full https:// URL to your Google Scholar or ResearchGate profile.";
     if (!isEmail(v.email)) errors.email = "Enter a valid email address.";
     if (!isPhone(v.phone)) errors.phone = "Enter a valid phone number (7–15 digits).";
@@ -1307,28 +1414,35 @@ function initLoginForm() {
   });
 }
 
+function currentStatusBadge(status) {
+  if (status === "On Duty") return '<span class="badge badge-duty">On Duty</span>';
+  if (status === "Study Leave") return '<span class="badge badge-study">Study Leave</span>';
+  return '<span class="badge badge-used">Not set</span>';
+}
+
 function renderStaffProfile(staff) {
   const dl = $("#staff-profile");
   if (!staff) { dl.innerHTML = ""; return; }
 
   const rows = [
-    ["Full name", staff.fullName],
-    ["Sex", staff.sex],
-    ["Educational qualification", staff.qualification],
-    ["Specialty", staff.specialty],
-    ["Rank", staff.rank],
-    ["Employment type", staff.employmentType],
-    ["Email", staff.email],
-    ["Phone", staff.phone],
-    ["Account status", staff.status],
-    ["Registration code", staff.registrationCode],
-    ["Registered on", fmtDate(staff.createdAt)],
-    ["Last sign-in", fmtDate(staff.lastLoginAt)]
+    ["Full name", esc(staff.fullName)],
+    ["Sex", esc(staff.sex)],
+    ["Educational qualification", esc(staff.qualification)],
+    ["Specialty", esc(staff.specialty)],
+    ["Rank", esc(staff.rank)],
+    ["Employment type", esc(staff.employmentType)],
+    ["Current status", currentStatusBadge(staff.currentStatus)],
+    ["Email", esc(staff.email)],
+    ["Phone", esc(staff.phone)],
+    ["Account status", esc(staff.status)],
+    ["Registration code", esc(staff.registrationCode)],
+    ["Registered on", esc(fmtDate(staff.createdAt))],
+    ["Last sign-in", esc(fmtDate(staff.lastLoginAt))]
   ];
 
   let html = "";
   rows.forEach(function (r) {
-    html += "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1] || "—") + "</dd></div>";
+    html += "<div><dt>" + esc(r[0]) + "</dt><dd>" + r[1] + "</dd></div>";
   });
 
   // The publication URL is shown as a real link
@@ -1419,7 +1533,10 @@ function initResetForm() {
 
       // Clear the ?reset= parameter and the token from memory
       state.resetToken = "";
-      history.replaceState(null, "", window.location.pathname + window.location.search.replace(/([?&])reset=[^&]*/g, "").replace(/^&/, "?") + "#login");
+      history.replaceState(null, "",
+        window.location.pathname +
+        window.location.search.replace(/([?&])reset=[^&]*/g, "").replace(/^&/, "?") +
+        "#login");
 
       setTimeout(function () { showView("login"); }, 1800);
     } catch (err) {
@@ -1525,7 +1642,7 @@ async function loadAdminData() {
       return !r.success && /sign in again|session/i.test(r.error || "");
     });
     if (authProblem) {
-      signOut("Your administrator session has expired. Please sign in again.");
+      signOut();
       showView("admin-login");
       setStatus($("#admin-login-status"), "Your administrator session has expired. Please sign in again.", "error");
       return;
@@ -1554,6 +1671,8 @@ function renderStats(stats) {
   set("staff.total", stats.staff.total);
   set("staff.active", stats.staff.active);
   set("staff.deactivated", stats.staff.deactivated);
+  set("staff.onDuty", stats.staff.onDuty);
+  set("staff.studyLeave", stats.staff.studyLeave);
   set("codes.total", stats.codes.total);
   set("codes.unused", stats.codes.unused);
   set("codes.used", stats.codes.used);
@@ -1594,11 +1713,28 @@ function renderCodes() {
       '<td class="mono">' + esc(c.code) + "</td>" +
       '<td><span class="badge ' + statusClass + '">' + esc(c.status) + "</span></td>" +
       "<td>" + esc(fmtDate(c.createdAt)) + "</td>" +
-      "<td>" + (c.usedByEmail ? esc(c.usedByEmail) + '<br><span style="color:var(--muted);font-size:.8em">' + esc(fmtDate(c.usedAt)) + "</span>" : "—") + "</td>" +
+      "<td>" + (c.usedByEmail
+        ? esc(c.usedByEmail) + '<br><span style="color:var(--muted);font-size:.8em">' + esc(fmtDate(c.usedAt)) + "</span>"
+        : "—") + "</td>" +
       "<td>" + (c.note ? esc(c.note) : "—") + "</td>" +
       "<td>" + actions + "</td>" +
       "</tr>";
   }).join("");
+}
+
+/** Build the inline "current status" dropdown for one staff row. */
+function currentStatusSelect(staff) {
+  const known = CURRENT_STATUSES.indexOf(staff.currentStatus) !== -1;
+  let options = known ? "" : '<option value="" selected>—</option>';
+
+  options += CURRENT_STATUSES.map(function (s) {
+    const selected = (s === staff.currentStatus) ? " selected" : "";
+    return '<option value="' + esc(s) + '"' + selected + ">" + esc(s) + "</option>";
+  }).join("");
+
+  return '<select class="inline-select" data-status-email="' + esc(staff.email) +
+         '" aria-label="Current status for ' + esc(staff.fullName) + '">' +
+         options + "</select>";
 }
 
 function renderStaffTable() {
@@ -1607,12 +1743,13 @@ function renderStaffTable() {
 
   const rows = state.staffList.filter(function (s) {
     if (!query) return true;
-    const haystack = [s.fullName, s.email, s.specialty, s.rank, s.qualification, s.phone, s.status].join(" ");
+    const haystack = [s.fullName, s.email, s.specialty, s.rank, s.qualification,
+                      s.phone, s.status, s.currentStatus].join(" ");
     return haystack.toLowerCase().indexOf(query) !== -1;
   });
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td class="cell-empty" colspan="7">' +
+    tbody.innerHTML = '<tr><td class="cell-empty" colspan="8">' +
       (state.staffList.length ? "No staff match your search." : "No staff members have registered yet.") +
       "</td></tr>";
     return;
@@ -1631,10 +1768,48 @@ function renderStaffTable() {
       "<td>" + esc(s.phone) + "</td>" +
       "<td>" + esc(s.rank) + "</td>" +
       "<td>" + esc(s.employmentType) + "</td>" +
+      "<td>" + currentStatusSelect(s) + "</td>" +
       '<td><span class="badge ' + badge + '">' + esc(s.status) + "</span></td>" +
       "<td>" + action + "</td>" +
       "</tr>";
   }).join("");
+}
+
+/** Persist a change made in the inline current-status dropdown. */
+async function updateStaffCurrentStatus(email, currentStatus, selectEl) {
+  const statusEl = $("#admin-status");
+  if (selectEl) selectEl.disabled = true;
+
+  try {
+    const data = unwrap(await api("adminSetStaffCurrentStatus", {
+      token: state.token,
+      email: email,
+      currentStatus: currentStatus
+    }));
+
+    // Keep the local cache in step with the server
+    const rec = state.staffList.find(function (s) {
+      return s.email.toLowerCase() === email.toLowerCase();
+    });
+    if (rec) rec.currentStatus = currentStatus;
+
+    setStatus(statusEl, data.message, "ok");
+
+    // Refresh the summary counts without a full reload
+    const counts = state.staffList.reduce(function (acc, s) {
+      if (s.currentStatus === "On Duty") acc.onDuty++;
+      if (s.currentStatus === "Study Leave") acc.studyLeave++;
+      return acc;
+    }, { onDuty: 0, studyLeave: 0 });
+
+    const dutyEl = document.querySelector('[data-stat="staff.onDuty"]');
+    const studyEl = document.querySelector('[data-stat="staff.studyLeave"]');
+    if (dutyEl) dutyEl.textContent = String(counts.onDuty);
+    if (studyEl) studyEl.textContent = String(counts.studyLeave);
+  } catch (err) {
+    setStatus(statusEl, err.message, "error");
+    renderStaffTable(); // re-render so the dropdown reverts to the stored value
+  }
 }
 
 /* ------------------------- admin: generate codes ---------------------- */
@@ -1691,7 +1866,7 @@ function initGenerateCodesForm() {
 
 /* --------------------- admin: table action delegation ----------------- */
 function initAdminTableActions() {
-  // Codes table
+  // Codes table — buttons
   $("#codes-body").addEventListener("click", async function (e) {
     const btn = e.target.closest("[data-code-action]");
     if (!btn) return;
@@ -1714,7 +1889,7 @@ function initAdminTableActions() {
     }
   });
 
-  // Staff table
+  // Staff table — buttons
   $("#staff-body").addEventListener("click", async function (e) {
     const btn = e.target.closest("[data-staff-action]");
     if (!btn) return;
@@ -1738,6 +1913,13 @@ function initAdminTableActions() {
     } finally {
       btn.disabled = false;
     }
+  });
+
+  // Staff table — inline current-status dropdowns
+  $("#staff-body").addEventListener("change", function (e) {
+    const sel = e.target.closest("[data-status-email]");
+    if (!sel) return;
+    updateStaffCurrentStatus(sel.getAttribute("data-status-email"), sel.value, sel);
   });
 
   // Live search filters
