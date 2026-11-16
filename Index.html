@@ -17,8 +17,7 @@
   3. Commit this file to a GitHub repository and enable GitHub Pages
      (Settings ▸ Pages ▸ Branch: main ▸ /root).
   4. Back in Apps Script, set the Script Property  SITE_URL  to the published
-     GitHub Pages URL (e.g. https://username.github.io/repo/) so password-reset
-     emails link back to this page.
+     GitHub Pages URL so password-reset emails link back to this page.
   5. The first administrator is created by running setupAdmin() inside the
      Apps Script editor — there is no admin sign-up form here by design.
 
@@ -28,16 +27,16 @@
   to render for every visitor:
     • The Drive file must be shared "Anyone with the link can view".
     • The URL uses lh3.googleusercontent.com (the most reliable Drive CDN).
-  If the image fails to load (deleted file, sharing changed, CDN block) the
-  code falls back automatically to an inline SVG heart-with-pulse logo, so
-  the header never breaks.
+  If the image fails to load the code falls back automatically to an inline
+  SVG heart-with-pulse logo, so the header never breaks.
 
-  PUBLIC STAFF DIRECTORY
-  ----------------------
-  The "Our staff" section on the home page calls the publicStaffList action,
-  which requires NO authentication and returns only ACTIVE accounts with
-  professional fields. It is refreshed on page load and again whenever you
-  navigate back to Home (debounced to once per 60 seconds).
+  PUBLIC STAFF DIRECTORY & EDUCATIONAL RESOURCES
+  ----------------------------------------------
+  The "Our staff" and "Educational Resources" sections on the home page
+  call publicStaffList and publicListResources — both are OPEN endpoints
+  that require NO authentication and return only data meant for public view.
+  They refresh on page load and (debounced to once per 60 seconds) whenever
+  you navigate back to Home.
   =============================================================================
 -->
 
@@ -72,7 +71,6 @@
 
   /* ============================== BASE ================================== */
   *,*::before,*::after{ box-sizing:border-box; }
-
   html{ scroll-behavior:smooth; }
 
   body{
@@ -90,13 +88,11 @@
   a{ color:var(--brand); }
   a:hover{ color:var(--brand-dark); }
 
-  /* Visible, high-contrast focus ring everywhere (keyboard users) */
   :focus-visible{
     outline:3px solid var(--brand-mid);
     outline-offset:2px;
     border-radius:4px;
   }
-  /* On the dark violet header, use the gold accent so the ring is visible */
   .site-header :focus-visible{ outline-color:var(--gold); }
 
   .skip-link{
@@ -124,7 +120,6 @@
 
   .brand{ display:flex; gap:1rem; align-items:flex-start; flex:1 1 620px; min-width:0; }
 
-  /* Logo tile: Google-Drive-hosted image with SVG fallback */
   .brand-mark{
     flex:none;
     display:inline-flex;
@@ -148,8 +143,6 @@
     height:auto;
   }
 
-  /* Fallback is hidden by default; JavaScript reveals it only when the img
-     fails to load. Everything is inline so no extra request is needed. */
   .brand-fallback{
     display:none;
     align-items:center;
@@ -190,7 +183,6 @@
     font-size:.98em;
     font-weight:600;
     color:#efe7ff;
-    /* Ethiopic-capable stack is inherited, but be explicit for safety */
     font-family:"Noto Sans Ethiopic", "Nyala", "Abyssinica SIL", "Ebrima", var(--font);
   }
 
@@ -307,6 +299,7 @@
   input[type="url"],
   input[type="password"],
   input[type="search"],
+  input[type="file"],
   select,
   textarea{
     width:100%;
@@ -319,7 +312,12 @@
     transition:border-color .15s ease, box-shadow .15s ease;
   }
 
-  /* Native dropdowns render with a consistent chevron on all platforms */
+  input[type="file"]{
+    padding:.45rem .5rem;
+    cursor:pointer;
+    font-size:.9rem;
+  }
+
   select{
     appearance:none;
     background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235b21b6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
@@ -330,7 +328,9 @@
     cursor:pointer;
   }
 
-  input::placeholder{ color:#9a90b0; }
+  textarea{ resize:vertical; min-height:100px; }
+
+  input::placeholder, textarea::placeholder{ color:#9a90b0; }
 
   input:focus, select:focus, textarea:focus{
     border-color:var(--brand);
@@ -338,7 +338,7 @@
     outline:none;
   }
 
-  input[aria-invalid="true"], select[aria-invalid="true"]{
+  input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="true"]{
     border-color:var(--red);
     background:#fffafa;
   }
@@ -473,6 +473,122 @@
     margin:0;
   }
 
+  /* ============================== PUBLIC RESOURCES (NEW) ================ */
+  .resources{ margin-top:2.5rem; }
+
+  .resources .section-head{
+    display:flex; flex-wrap:wrap; gap:.75rem;
+    align-items:center; justify-content:space-between;
+    margin-bottom:1rem;
+  }
+  .resources .section-head h2{ margin:0; font-size:1.25rem; }
+
+  .resource-tabs{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.35rem;
+  }
+  .tab-btn{
+    appearance:none;
+    font:inherit; font-size:.85rem; font-weight:600;
+    padding:.35rem .85rem;
+    border-radius:999px;
+    border:1.5px solid var(--line);
+    background:var(--white);
+    color:var(--brand-dark);
+    cursor:pointer;
+    transition:background .15s, border-color .15s;
+  }
+  .tab-btn:hover{ background:var(--brand-soft); border-color:var(--brand); }
+  .tab-btn.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
+
+  .resource-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+    gap:1rem;
+  }
+
+  .resource-card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .resource-card .resource-media{
+    width:100%;
+    aspect-ratio:4/3;
+    overflow:hidden;
+    background:var(--brand-soft);
+    display:block;
+  }
+  .resource-card .resource-media img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+    transition:transform .25s ease;
+  }
+  .resource-card .resource-media:hover img{ transform:scale(1.03); }
+
+  .resource-card .resource-body{
+    padding:1rem 1.1rem;
+    display:flex;
+    flex-direction:column;
+    gap:.35rem;
+    flex:1;
+    min-width:0;
+  }
+  .resource-card h3{
+    font-size:.98rem;
+    margin:0;
+    color:var(--brand-dark);
+    line-height:1.35;
+    word-break:break-word;
+  }
+  .resource-card .resource-desc{
+    font-size:.88rem;
+    color:var(--muted);
+    margin:0;
+    line-height:1.5;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+  .resource-card .resource-meta{
+    font-size:.78rem;
+    color:var(--muted);
+    margin:.25rem 0 0;
+    word-break:break-word;
+  }
+  .resource-card .resource-actions{
+    margin-top:auto;
+    padding-top:.6rem;
+    display:flex;
+    flex-wrap:wrap;
+    gap:.4rem;
+  }
+
+  .resource-badge{
+    display:inline-block;
+    font-size:.68rem;
+    font-weight:700;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    padding:.15rem .5rem;
+    border-radius:999px;
+    background:var(--brand-soft);
+    color:var(--brand-dark);
+    border:1px solid #d3c6f5;
+    margin-bottom:.4rem;
+    align-self:flex-start;
+  }
+  .resource-badge.photo{ background:var(--brand-soft); }
+  .resource-badge.message{ background:#e7f1fb; color:#1b4f88; border-color:#c6ddf3; }
+  .resource-badge.file{ background:var(--green-soft); color:var(--green); border-color:#bfe0cc; }
+
   /* ============================== STATS ================================= */
   .stat-grid{
     display:grid;
@@ -535,7 +651,6 @@
 
   .mono{ font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size:.86em; }
 
-  /* Inline dropdown used in the admin staff table */
   .inline-select{
     font:inherit; font-size:.82rem;
     padding:.28rem .5rem;
@@ -643,8 +758,6 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <div class="brand">
-      <!-- Google-Drive-hosted logo, with an inline SVG fallback that appears
-           automatically if the image fails to load for any reason. -->
       <div class="brand-mark">
         <img
           class="brand-logo"
@@ -741,6 +854,27 @@
           <p class="directory-loading">Loading staff directory…</p>
         </div>
         <p class="directory-empty" id="directory-empty" hidden></p>
+      </section>
+
+      <!-- --------------- EDUCATIONAL RESOURCES (NEW) --------------- -->
+      <section class="resources" aria-labelledby="resources-heading">
+        <div class="section-head">
+          <h2 id="resources-heading">Educational Resources</h2>
+          <div class="resource-tabs" role="tablist" aria-label="Filter educational resources">
+            <button class="tab-btn active" type="button" data-filter="all"
+                    role="tab" aria-selected="true">All</button>
+            <button class="tab-btn" type="button" data-filter="photo"
+                    role="tab" aria-selected="false">Photos</button>
+            <button class="tab-btn" type="button" data-filter="message"
+                    role="tab" aria-selected="false">Messages</button>
+            <button class="tab-btn" type="button" data-filter="resource"
+                    role="tab" aria-selected="false">Files</button>
+          </div>
+        </div>
+        <p class="form-status" id="resources-status" role="status" hidden></p>
+        <div id="public-resources-content">
+          <p class="directory-loading">Loading educational resources…</p>
+        </div>
       </section>
     </section>
 
@@ -1064,10 +1198,10 @@
             <div class="stat"><span class="stat-label">Deactivated</span><span class="stat-value" data-stat="staff.deactivated">—</span></div>
             <div class="stat"><span class="stat-label">On duty</span><span class="stat-value" data-stat="staff.onDuty">—</span></div>
             <div class="stat"><span class="stat-label">Study leave</span><span class="stat-value" data-stat="staff.studyLeave">—</span></div>
+            <div class="stat"><span class="stat-label">Resources</span><span class="stat-value" data-stat="resources.total">—</span></div>
+            <div class="stat"><span class="stat-label">Visible</span><span class="stat-value" data-stat="resources.visible">—</span></div>
             <div class="stat"><span class="stat-label">Codes total</span><span class="stat-value" data-stat="codes.total">—</span></div>
             <div class="stat"><span class="stat-label">Unused</span><span class="stat-value" data-stat="codes.unused">—</span></div>
-            <div class="stat"><span class="stat-label">Used</span><span class="stat-value" data-stat="codes.used">—</span></div>
-            <div class="stat"><span class="stat-label">Revoked</span><span class="stat-value" data-stat="codes.revoked">—</span></div>
           </div>
         </div>
 
@@ -1100,6 +1234,100 @@
           </form>
 
           <ul class="code-list" id="generated-codes" hidden></ul>
+        </div>
+
+        <!-- ---------------- UPLOAD EDUCATIONAL RESOURCES (NEW) ---------------- -->
+        <div class="panel">
+          <div class="section-head">
+            <h2>Upload educational resources</h2>
+          </div>
+          <p style="color:var(--muted);font-size:.93rem;margin-top:0">
+            Publish photos, messages, and downloadable files that will appear on the home page.
+            Photos are limited to 8&nbsp;MB, files to 20&nbsp;MB.
+          </p>
+
+          <p class="form-status" id="upload-status" role="status" hidden></p>
+
+          <form id="form-upload-resource" novalidate>
+            <div class="field-row">
+              <div class="field">
+                <label for="upl-type">Type <span class="req" aria-hidden="true">*</span></label>
+                <select id="upl-type" name="type" required>
+                  <option value="">Select…</option>
+                  <option value="photo">Photo</option>
+                  <option value="message">Message</option>
+                  <option value="resource">Educational resource (file)</option>
+                </select>
+                <p class="field-error" data-error-for="type" hidden></p>
+              </div>
+              <div class="field">
+                <label for="upl-sortOrder">Sort order (optional)</label>
+                <input type="text" id="upl-sortOrder" name="sortOrder" inputmode="numeric"
+                       value="0" maxlength="4" placeholder="0">
+                <span class="hint">Lower numbers appear first on the home page.</span>
+                <p class="field-error" data-error-for="sortOrder" hidden></p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="upl-title">Title <span class="req" aria-hidden="true">*</span></label>
+              <input type="text" id="upl-title" name="title" required maxlength="200"
+                     placeholder="e.g. Newborn resuscitation guide">
+              <p class="field-error" data-error-for="title" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="upl-description" id="upl-desc-label">Description</label>
+              <textarea id="upl-description" name="description" rows="4" maxlength="2000"
+                        placeholder="A short note about what this is."></textarea>
+              <span class="hint" id="upl-desc-hint">Optional for photos and files; required for messages.</span>
+              <p class="field-error" data-error-for="description" hidden></p>
+            </div>
+
+            <div class="field" id="upl-file-field" hidden>
+              <label for="upl-file">File <span class="req" aria-hidden="true">*</span></label>
+              <input type="file" id="upl-file" name="file">
+              <span class="hint" id="upl-file-hint">Choose a file to upload.</span>
+              <p class="field-error" data-error-for="file" hidden></p>
+            </div>
+
+            <div class="field">
+              <label style="display:flex;align-items:center;gap:.5rem;font-weight:500">
+                <input type="checkbox" id="upl-visible" name="visible" checked
+                       style="width:auto;margin:0">
+                Show immediately on the home page
+              </label>
+            </div>
+
+            <button class="btn btn-primary" type="submit" id="upl-submit">Upload</button>
+          </form>
+        </div>
+
+        <!-- ---------------- MANAGE RESOURCES (NEW) ---------------- -->
+        <div class="panel">
+          <div class="table-toolbar">
+            <h3>Published resources</h3>
+            <input type="search" id="resources-search"
+                   placeholder="Search title, type or note…"
+                   aria-label="Search resources">
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption class="visually-hidden">All uploaded educational resources</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Title</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Uploaded</th>
+                  <th scope="col">Visible</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="resources-body">
+                <tr><td class="cell-empty" colspan="5">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <!-- Codes table -->
@@ -1196,6 +1424,10 @@ const RANKS = [
   "Lecturer", "Assistant Professor", "Associate Professor", "Professor", "Other"
 ];
 const CURRENT_STATUSES = ["On Duty", "Study Leave"];
+const RESOURCE_TYPES = ["photo", "message", "resource"];
+
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;    // matches CONFIG.MAX_PHOTO_BYTES
+const MAX_RESOURCE_BYTES = 20 * 1024 * 1024; // matches CONFIG.MAX_RESOURCE_BYTES
 
 
 /* ============================== STATE ==================================== */
@@ -1206,6 +1438,9 @@ const state = {
   codes: [],
   staffList: [],
   publicStaff: [],
+  resources: [],
+  publicResources: [],
+  resourceFilter: "all",
   resetToken: ""
 };
 
@@ -1254,6 +1489,14 @@ function fmtDate(iso) {
   });
 }
 
+/** Human-readable byte size. */
+function fmtBytes(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / (1024 * 1024)).toFixed(1) + " MB";
+}
+
 /** Show a status message inside a .form-status element. */
 function setStatus(el, message, kind) {
   if (!el) return;
@@ -1284,7 +1527,6 @@ function applyFieldErrors(form, errors) {
   });
 }
 
-/* Clear an individual field's error as soon as the user edits it. */
 function wireLiveFieldErrors(form) {
   ["input", "change"].forEach(function (evt) {
     form.addEventListener(evt, function (e) {
@@ -1334,7 +1576,6 @@ async function api(action, payload) {
   return data;
 }
 
-/** Throw if the API reported failure; otherwise return the payload. */
 function unwrap(data) {
   if (!data || data.success !== true) {
     const err = new Error((data && data.error) || "Something went wrong. Please try again.");
@@ -1342,6 +1583,22 @@ function unwrap(data) {
     throw err;
   }
   return data;
+}
+
+/** Read a File object into a base64 string (no data: prefix). */
+function readFileAsBase64(file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function () {
+      const result = String(reader.result || "");
+      const comma = result.indexOf(",");
+      resolve(comma !== -1 ? result.substring(comma + 1) : result);
+    };
+    reader.onerror = function () {
+      reject(new Error("Could not read the selected file. Try a different file."));
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 
@@ -1354,20 +1611,17 @@ function showView(name) {
     if (section) section.hidden = (v !== name);
   });
 
-  // Highlight the matching top-nav link
   const navKey = NAV_MAP[name];
   $$("[data-nav]").forEach(function (a) {
     if (a.getAttribute("data-nav") === navKey) a.setAttribute("aria-current", "page");
     else a.removeAttribute("aria-current");
   });
 
-  // Reflect the view in the hash so links are shareable and the back button works
   const target = "#" + name;
   if (window.location.hash !== target) {
     history.replaceState(null, "", target);
   }
 
-  // Move focus to the view heading for screen-reader and keyboard users
   const heading = $("#view-" + name + " h2");
   if (heading) {
     heading.setAttribute("tabindex", "-1");
@@ -1376,9 +1630,10 @@ function showView(name) {
 
   window.scrollTo({ top: 0, behavior: "auto" });
 
-  // Refresh the public directory (debounced) whenever we land on Home
+  // Refresh the public content (debounced) whenever we land on Home
   if (name === "home") {
     maybeLoadPublicStaffDirectory();
+    maybeLoadPublicResources();
   }
 }
 
@@ -1424,7 +1679,6 @@ function signOut(message) {
 
 
 /* ============================== VALIDATION =============================== */
-/* Client-side mirror of the server rules. The server re-validates everything. */
 function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(v) && v.length <= 120; }
 
 function isUrl(v) {
@@ -1450,19 +1704,12 @@ function passwordProblem(pw) {
 
 
 /* ============================== PUBLIC DIRECTORY ========================= */
-
 let lastDirectoryLoad = 0;
-const DIRECTORY_DEBOUNCE_MS = 60000; // refresh at most once per minute
+const DIRECTORY_DEBOUNCE_MS = 60000;
 
-/**
- * Refresh the directory unless it was loaded very recently.
- * Called on initial page load and every time the user returns to Home.
- */
 function maybeLoadPublicStaffDirectory() {
   const now = Date.now();
-  if (state.publicStaff.length && (now - lastDirectoryLoad) < DIRECTORY_DEBOUNCE_MS) {
-    return; // cached copy is fresh enough
-  }
+  if (state.publicStaff.length && (now - lastDirectoryLoad) < DIRECTORY_DEBOUNCE_MS) return;
   loadPublicStaffDirectory();
 }
 
@@ -1475,8 +1722,6 @@ async function loadPublicStaffDirectory() {
   setStatus(statusEl, "", null);
   empty.hidden = true;
   if (countEl) countEl.hidden = true;
-
-  // Only show the spinner on the very first load; on a refresh, keep the cards visible.
   if (!state.publicStaff.length) {
     grid.innerHTML = '<p class="directory-loading">Loading staff directory…</p>';
   }
@@ -1535,8 +1780,6 @@ function renderStaffCard(s) {
     s.currentStatus === "Study Leave" ? '<span class="badge badge-study">Study Leave</span>' :
     "";
 
-  // The email row is intentionally public for a professional directory.
-  // To hide it, simply delete the emailLink block below.
   const emailLink = s.email
     ? '<p class="staff-meta">Email: <a href="mailto:' + esc(s.email) + '">' + esc(s.email) + "</a></p>"
     : "";
@@ -1555,6 +1798,130 @@ function renderStaffCard(s) {
     emailLink +
     pubLink +
     "</article>";
+}
+
+
+/* ============================== PUBLIC RESOURCES (NEW) =================== */
+let lastResourcesLoad = 0;
+const RESOURCES_DEBOUNCE_MS = 60000;
+
+function maybeLoadPublicResources() {
+  const now = Date.now();
+  if (state.publicResources.length && (now - lastResourcesLoad) < RESOURCES_DEBOUNCE_MS) return;
+  loadPublicResources();
+}
+
+async function loadPublicResources() {
+  const container = $("#public-resources-content");
+  const statusEl = $("#resources-status");
+
+  setStatus(statusEl, "", null);
+  if (!state.publicResources.length) {
+    container.innerHTML = '<p class="directory-loading">Loading educational resources…</p>';
+  }
+
+  try {
+    const data = unwrap(await api("publicListResources", {}));
+    state.publicResources = data.resources || [];
+    lastResourcesLoad = Date.now();
+    renderPublicResources();
+  } catch (err) {
+    setStatus(statusEl, err.message, "error");
+    if (!state.publicResources.length) {
+      container.innerHTML = '<p class="directory-empty">The educational resources could not be loaded right now.</p>';
+    }
+  }
+}
+
+function publicPhotoUrl(fileId, width) {
+  if (!fileId) return "";
+  return "https://lh3.googleusercontent.com/d/" + encodeURIComponent(fileId) +
+         "=w" + (width || 800);
+}
+
+function publicDownloadUrl(fileId) {
+  if (!fileId) return "";
+  return "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(fileId);
+}
+
+function renderPublicResources() {
+  const container = $("#public-resources-content");
+  const filter = state.resourceFilter || "all";
+
+  let items = state.publicResources;
+  if (filter !== "all") {
+    items = items.filter(function (r) { return r.type === filter; });
+  }
+
+  if (!items.length) {
+    container.innerHTML = '<p class="directory-empty">' + esc(
+      state.publicResources.length
+        ? "No items in this category yet."
+        : "No educational resources have been published yet."
+    ) + "</p>";
+    return;
+  }
+
+  container.innerHTML = '<div class="resource-grid">' +
+    items.map(renderPublicResourceCard).join("") +
+    "</div>";
+}
+
+function renderPublicResourceCard(r) {
+  const badgeClass = r.type === "photo" ? "photo"
+                    : r.type === "message" ? "message"
+                    : "file";
+  const badgeLabel = r.type === "photo" ? "Photo"
+                    : r.type === "message" ? "Message"
+                    : "Resource";
+
+  const descHtml = r.description
+    ? '<p class="resource-desc">' + esc(r.description) + "</p>"
+    : "";
+
+  if (r.type === "photo" && r.fileId) {
+    const full = publicPhotoUrl(r.fileId, 1600);
+    const thumb = publicPhotoUrl(r.fileId, 600);
+    return '<article class="resource-card photo">' +
+      '<a class="resource-media" href="' + esc(full) + '" target="_blank" rel="noopener noreferrer">' +
+        '<img src="' + esc(thumb) + '" alt="' + esc(r.title) + '" loading="lazy">' +
+      "</a>" +
+      '<div class="resource-body">' +
+        '<span class="resource-badge ' + badgeClass + '">' + badgeLabel + "</span>" +
+        "<h3>" + esc(r.title) + "</h3>" +
+        descHtml +
+        '<p class="resource-meta">' + esc(fmtDate(r.uploadedAt)) + "</p>" +
+      "</div>" +
+    "</article>";
+  }
+
+  if (r.type === "message") {
+    return '<article class="resource-card message">' +
+      '<div class="resource-body">' +
+        '<span class="resource-badge ' + badgeClass + '">' + badgeLabel + "</span>" +
+        "<h3>" + esc(r.title) + "</h3>" +
+        descHtml +
+        '<p class="resource-meta">' + esc(fmtDate(r.uploadedAt)) + "</p>" +
+      "</div>" +
+    "</article>";
+  }
+
+  // resource (file)
+  const dl = publicDownloadUrl(r.fileId);
+  const meta = [r.fileName, fmtBytes(r.fileSize)].filter(Boolean).join(" · ");
+  return '<article class="resource-card file">' +
+    '<div class="resource-body">' +
+      '<span class="resource-badge ' + badgeClass + '">' + badgeLabel + "</span>" +
+      "<h3>" + esc(r.title) + "</h3>" +
+      descHtml +
+      (meta ? '<p class="resource-meta">' + esc(meta) + "</p>" : "") +
+      '<div class="resource-actions">' +
+        (dl ? '<a class="btn btn-primary btn-sm" href="' + esc(dl) +
+               '" target="_blank" rel="noopener noreferrer">Download</a>' : "") +
+      "</div>" +
+      '<p class="resource-meta">' + esc(fmtDate(r.uploadedAt)) + "</p>" +
+    "</div>" +
+  "</article>";
 }
 
 
@@ -1585,7 +1952,6 @@ function initRegisterForm() {
       password: form.password.value
     };
 
-    /* ---- client-side checks ---- */
     const errors = {};
     if (v.fullName.length < 3 || v.fullName.length > 80) errors.fullName = "Enter your full name (3–80 characters).";
     if (["Male", "Female"].indexOf(v.sex) === -1) errors.sex = "Select your sex.";
@@ -1618,8 +1984,6 @@ function initRegisterForm() {
       const data = unwrap(await api("register", v));
       setStatus(statusEl, data.message || "Registration complete. You can now sign in.", "ok");
       form.reset();
-
-      // Pre-fill the login form and send the user there after a moment
       $("#login-email").value = v.email;
       $("#login-password").focus();
       setTimeout(function () { showView("login"); }, 1400);
@@ -1711,7 +2075,6 @@ function renderStaffProfile(staff) {
     html += "<div><dt>" + esc(r[0]) + "</dt><dd>" + r[1] + "</dd></div>";
   });
 
-  // The publication URL is shown as a real link
   const pub = safeUrl(staff.publicationUrl);
   if (pub) {
     html += '<div><dt>Publication profile</dt><dd>' +
@@ -1800,7 +2163,6 @@ function initResetForm() {
       form.hidden = true;
       target.textContent = "Password updated successfully.";
 
-      // Clear the ?reset= parameter and the token from memory
       state.resetToken = "";
       history.replaceState(null, "",
         window.location.pathname +
@@ -1817,7 +2179,6 @@ function initResetForm() {
   });
 }
 
-/** Called on load when the URL carries ?reset=<token>. */
 async function beginResetFlow(token) {
   state.resetToken = token;
   const form = $("#form-reset");
@@ -1905,10 +2266,10 @@ async function loadAdminData() {
     const results = await Promise.all([
       api("adminStats", { token: state.token }),
       api("adminListCodes", { token: state.token }),
-      api("adminListStaff", { token: state.token })
+      api("adminListStaff", { token: state.token }),
+      api("adminListResources", { token: state.token })
     ]);
 
-    // If any call reports an expired session, drop it and return to sign-in.
     const authProblem = results.find(function (r) {
       return !r.success && /sign in again|session/i.test(r.error || "");
     });
@@ -1922,12 +2283,15 @@ async function loadAdminData() {
     const stats = unwrap(results[0]);
     const codes = unwrap(results[1]);
     const staff = unwrap(results[2]);
+    const resources = unwrap(results[3]);
 
     renderStats(stats);
     state.codes = codes.codes || [];
     state.staffList = staff.staff || [];
+    state.resources = resources.resources || [];
     renderCodes();
     renderStaffTable();
+    renderResourcesTable();
     setStatus(statusEl, "", null);
   } catch (err) {
     setStatus(statusEl, err.message, "error");
@@ -1944,6 +2308,10 @@ function renderStats(stats) {
   set("staff.deactivated", stats.staff.deactivated);
   set("staff.onDuty", stats.staff.onDuty);
   set("staff.studyLeave", stats.staff.studyLeave);
+  if (stats.resources) {
+    set("resources.total", stats.resources.total);
+    set("resources.visible", stats.resources.visible);
+  }
   set("codes.total", stats.codes.total);
   set("codes.unused", stats.codes.unused);
   set("codes.used", stats.codes.used);
@@ -1993,7 +2361,6 @@ function renderCodes() {
   }).join("");
 }
 
-/** Build the inline "current status" dropdown for one staff row. */
 function currentStatusSelect(staff) {
   const known = CURRENT_STATUSES.indexOf(staff.currentStatus) !== -1;
   let options = known ? "" : '<option value="" selected>—</option>';
@@ -2046,7 +2413,6 @@ function renderStaffTable() {
   }).join("");
 }
 
-/** Persist a change made in the inline current-status dropdown. */
 async function updateStaffCurrentStatus(email, currentStatus, selectEl) {
   const statusEl = $("#admin-status");
   if (selectEl) selectEl.disabled = true;
@@ -2058,7 +2424,6 @@ async function updateStaffCurrentStatus(email, currentStatus, selectEl) {
       currentStatus: currentStatus
     }));
 
-    // Keep the local cache in step with the server
     const rec = state.staffList.find(function (s) {
       return s.email.toLowerCase() === email.toLowerCase();
     });
@@ -2066,7 +2431,6 @@ async function updateStaffCurrentStatus(email, currentStatus, selectEl) {
 
     setStatus(statusEl, data.message, "ok");
 
-    // Refresh the summary counts without a full reload
     const counts = state.staffList.reduce(function (acc, s) {
       if (s.currentStatus === "On Duty") acc.onDuty++;
       if (s.currentStatus === "Study Leave") acc.studyLeave++;
@@ -2078,11 +2442,85 @@ async function updateStaffCurrentStatus(email, currentStatus, selectEl) {
     if (dutyEl) dutyEl.textContent = String(counts.onDuty);
     if (studyEl) studyEl.textContent = String(counts.studyLeave);
 
-    // Also invalidate the public-directory cache so Home reflects the change
     lastDirectoryLoad = 0;
   } catch (err) {
     setStatus(statusEl, err.message, "error");
-    renderStaffTable(); // re-render so the dropdown reverts to the stored value
+    renderStaffTable();
+  }
+}
+
+
+/* ========================= ADMIN — RESOURCES TABLE (NEW) ================= */
+function renderResourcesTable() {
+  const tbody = $("#resources-body");
+  const query = ($("#resources-search").value || "").trim().toLowerCase();
+
+  const rows = state.resources.filter(function (r) {
+    if (!query) return true;
+    return [r.title, r.type, r.description, r.fileName]
+      .join(" ").toLowerCase().indexOf(query) !== -1;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td class="cell-empty" colspan="5">' +
+      (state.resources.length ? "No resources match your search." : "No resources uploaded yet.") +
+      "</td></tr>";
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (r) {
+    const visBadge = r.visible
+      ? '<span class="badge badge-active">Visible</span>'
+      : '<span class="badge badge-deactivated">Hidden</span>';
+    const typeBadge = r.type === "photo" ? '<span class="badge badge-duty">Photo</span>'
+                    : r.type === "message" ? '<span class="badge badge-study">Message</span>'
+                    : '<span class="badge badge-unused">File</span>';
+    const toggleLabel = r.visible ? "Hide" : "Show";
+    const toggleAction = r.visible ? "false" : "true";
+
+    return "<tr>" +
+      "<td>" + esc(r.title) + "</td>" +
+      "<td>" + typeBadge + "</td>" +
+      "<td>" + esc(fmtDate(r.uploadedAt)) + "</td>" +
+      "<td>" + visBadge + "</td>" +
+      "<td>" +
+        '<button class="btn btn-outline btn-sm" type="button" ' +
+          'data-resource-action="visibility" ' +
+          'data-resource-id="' + esc(r.id) + '" ' +
+          'data-resource-visible="' + toggleAction + '">' + toggleLabel + "</button> " +
+        '<button class="btn btn-danger btn-sm" type="button" ' +
+          'data-resource-action="delete" ' +
+          'data-resource-id="' + esc(r.id) + '">Delete</button>' +
+      "</td>" +
+      "</tr>";
+  }).join("");
+}
+
+async function handleResourceAction(id, action, visible) {
+  const statusEl = $("#admin-status");
+  if (action === "delete") {
+    if (!window.confirm("Delete this resource permanently? Uploaded files will also be removed from Drive.")) return;
+    try {
+      const data = unwrap(await api("adminDeleteResource", { token: state.token, id: id }));
+      setStatus(statusEl, data.message, "ok");
+      await loadAdminData();
+      lastResourcesLoad = 0;
+    } catch (err) {
+      setStatus(statusEl, err.message, "error");
+    }
+    return;
+  }
+  if (action === "visibility") {
+    try {
+      const data = unwrap(await api("adminSetResourceVisibility", {
+        token: state.token, id: id, visible: visible
+      }));
+      setStatus(statusEl, data.message, "ok");
+      await loadAdminData();
+      lastResourcesLoad = 0;
+    } catch (err) {
+      setStatus(statusEl, err.message, "error");
+    }
   }
 }
 
@@ -2115,18 +2553,13 @@ function initGenerateCodesForm() {
         count: count,
         note: form.note.value.trim()
       }));
-
       setStatus(statusEl, data.message, "ok");
-
-      // Show the new codes prominently so they can be copied out
       list.innerHTML = (data.codes || []).map(function (code) {
         return "<li>" + esc(code) + "</li>";
       }).join("");
       list.hidden = !(data.codes && data.codes.length);
-
       form.count.value = "1";
       form.note.value = "";
-
       await loadAdminData();
       setStatus(statusEl, data.message, "ok");
     } catch (err) {
@@ -2135,6 +2568,146 @@ function initGenerateCodesForm() {
     } finally {
       submit.disabled = false;
       submit.textContent = "Generate codes";
+    }
+  });
+}
+
+
+/* ------------------------- admin: upload resource --------------------- */
+function initUploadResourceForm() {
+  const form = $("#form-upload-resource");
+  const statusEl = $("#upload-status");
+  const submit = $("#upl-submit");
+  const typeSel = form.type;
+  const fileField = $("#upl-file-field");
+  const fileInput = $("#upl-file");
+  const fileHint = $("#upl-file-hint");
+  const descLabel = $("#upl-desc-label");
+  const descHint = $("#upl-desc-hint");
+  wireLiveFieldErrors(form);
+
+  function syncTypeUI() {
+    const type = typeSel.value;
+    if (type === "message") {
+      fileField.hidden = true;
+      fileInput.required = false;
+      descLabel.innerHTML = 'Message body <span class="req" aria-hidden="true">*</span>';
+      descHint.textContent = "This is the text shown on the home page.";
+    } else if (type === "photo") {
+      fileField.hidden = false;
+      fileInput.required = true;
+      fileInput.accept = "image/*";
+      fileHint.textContent = "Choose an image file. Maximum 8 MB.";
+      descLabel.textContent = "Description (optional)";
+      descHint.textContent = "Optional caption for this photo.";
+    } else if (type === "resource") {
+      fileField.hidden = false;
+      fileInput.required = true;
+      fileInput.accept = "";
+      fileHint.textContent = "Choose a file (PDF, DOCX, PPTX, XLSX, TXT, ZIP). Maximum 20 MB.";
+      descLabel.textContent = "Description (optional)";
+      descHint.textContent = "Optional note for students about this resource.";
+    } else {
+      fileField.hidden = true;
+      fileInput.required = false;
+      descLabel.textContent = "Description";
+      descHint.textContent = "Select a type first.";
+    }
+  }
+
+  typeSel.addEventListener("change", syncTypeUI);
+  syncTypeUI();
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+    setStatus(statusEl, "", null);
+
+    const type = typeSel.value;
+    const title = form.title.value.trim();
+    const description = form.description.value.trim();
+    const sortOrder = parseInt(form.sortOrder.value, 10);
+    const visible = form.visible.checked;
+
+    const errors = {};
+    if (RESOURCE_TYPES.indexOf(type) === -1) errors.type = "Choose a type.";
+    if (title.length < 2) errors.title = "Enter a title of at least 2 characters.";
+    if (type === "message" && description.length < 2) {
+      errors.description = "Enter the body of the message.";
+    }
+
+    if (Object.keys(errors).length) {
+      applyFieldErrors(form, errors);
+      setStatus(statusEl, "Please correct the highlighted fields.", "error");
+      return;
+    }
+
+    let dataBase64 = "";
+    let fileName = "";
+    let mimeType = "";
+
+    if (type !== "message") {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) {
+        applyFieldErrors(form, { file: "Choose a file to upload." });
+        setStatus(statusEl, "Please choose a file.", "error");
+        return;
+      }
+      const maxBytes = type === "photo" ? MAX_PHOTO_BYTES : MAX_RESOURCE_BYTES;
+      if (file.size > maxBytes) {
+        applyFieldErrors(form, {
+          file: "File is too large. Maximum is " + Math.round(maxBytes / (1024 * 1024)) + " MB."
+        });
+        setStatus(statusEl, "The selected file is too large.", "error");
+        return;
+      }
+      if (type === "photo" && file.type && file.type.indexOf("image/") !== 0) {
+        applyFieldErrors(form, { file: "Choose an image file (JPG, PNG, GIF, WebP)." });
+        setStatus(statusEl, "Photos must be image files.", "error");
+        return;
+      }
+
+      submit.disabled = true;
+      submit.textContent = "Reading file…";
+      try {
+        dataBase64 = await readFileAsBase64(file);
+      } catch (err) {
+        submit.disabled = false;
+        submit.textContent = "Upload";
+        setStatus(statusEl, err.message, "error");
+        return;
+      }
+      fileName = file.name;
+      mimeType = file.type || "application/octet-stream";
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Uploading…";
+
+    try {
+      const data = unwrap(await api("adminUploadResource", {
+        token: state.token,
+        type: type,
+        title: title,
+        description: description,
+        sortOrder: isNaN(sortOrder) ? 0 : sortOrder,
+        visible: visible,
+        dataBase64: dataBase64,
+        fileName: fileName,
+        mimeType: mimeType
+      }));
+
+      setStatus(statusEl, data.message || "Uploaded successfully.", "ok");
+      form.reset();
+      syncTypeUI();
+      await loadAdminData();
+      lastResourcesLoad = 0;
+    } catch (err) {
+      if (err.fieldErrors) applyFieldErrors(form, err.fieldErrors);
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Upload";
     }
   });
 }
@@ -2184,7 +2757,7 @@ function initAdminTableActions() {
       }));
       await loadAdminData();
       setStatus(statusEl, data.message, "ok");
-      lastDirectoryLoad = 0; // directory may now include/exclude this person
+      lastDirectoryLoad = 0;
     } catch (err) {
       setStatus(statusEl, err.message, "error");
     } finally {
@@ -2199,9 +2772,24 @@ function initAdminTableActions() {
     updateStaffCurrentStatus(sel.getAttribute("data-status-email"), sel.value, sel);
   });
 
+  // Resources table — buttons (NEW)
+  $("#resources-body").addEventListener("click", function (e) {
+    const btn = e.target.closest("[data-resource-action]");
+    if (!btn) return;
+    const action = btn.getAttribute("data-resource-action");
+    const id = btn.getAttribute("data-resource-id");
+    if (action === "visibility") {
+      const vis = btn.getAttribute("data-resource-visible") === "true";
+      handleResourceAction(id, action, vis);
+    } else {
+      handleResourceAction(id, action);
+    }
+  });
+
   // Live search filters
   $("#codes-search").addEventListener("input", renderCodes);
   $("#staff-search").addEventListener("input", renderStaffTable);
+  $("#resources-search").addEventListener("input", renderResourcesTable);
 }
 
 
@@ -2221,8 +2809,6 @@ async function restoreSession() {
     }
     $("#nav-signout").hidden = false;
   } catch (err) {
-    // A network hiccup should not destroy a valid local session silently;
-    // only clear when the server explicitly rejects us.
     if (/sign in again|session/i.test(err.message)) clearSession();
   }
 }
@@ -2237,10 +2823,23 @@ document.addEventListener("DOMContentLoaded", async function () {
   initResetForm();
   initAdminLoginForm();
   initGenerateCodesForm();
+  initUploadResourceForm();
   initAdminTableActions();
 
   /* ---- directory search ---- */
   $("#directory-search").addEventListener("input", renderStaffDirectory);
+
+  /* ---- resource filter tabs ---- */
+  $$(".tab-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      state.resourceFilter = btn.dataset.filter;
+      $$(".tab-btn").forEach(function (b) {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-selected", b === btn ? "true" : "false");
+      });
+      renderPublicResources();
+    });
+  });
 
   /* ---- sign-out buttons ---- */
   function handleSignOut() {
@@ -2278,14 +2877,15 @@ document.addEventListener("DOMContentLoaded", async function () {
            : "home");
   }
 
-  /* ---- make sure the directory is loaded on the home view ---- */
+  /* ---- make sure public content is loaded on the home view ---- */
   if (!$("#view-home").hidden) {
     maybeLoadPublicStaffDirectory();
+    maybeLoadPublicResources();
   }
 
   window.addEventListener("hashchange", function () {
     const p = new URLSearchParams(window.location.search);
-    if (p.get("reset")) return; // don't interrupt an in-progress reset
+    if (p.get("reset")) return;
     routeFromHash();
   });
 });
