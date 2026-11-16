@@ -1,0 +1,1825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Pediatrics and Child Health Nursing Education and Service — College of Medicine and Health Sciences, Wollo University, Tertiary Care & Teaching Hospital Campus.">
+<title>Pediatrics &amp; Child Health Nursing — Wollo University</title>
+
+<!--
+  =============================================================================
+  SETUP — index.html
+  =============================================================================
+  1. Deploy code.gs as an Apps Script Web App (see the setup block in code.gs).
+     Copy the /exec URL.
+  2. Paste that URL into the constant API_URL near the top of the <script>
+     block at the bottom of this file. It is the ONLY thing you must change.
+  3. Commit this file to a GitHub repository and enable GitHub Pages
+     (Settings ▸ Pages ▸ Branch: main ▸ /root). The page is served over HTTPS,
+     so the Apps Script URL must also be https.
+  4. Back in Apps Script, set the Script Property  SITE_URL  to the published
+     GitHub Pages URL (e.g. https://username.github.io/repo/) so password-reset
+     emails link back to this page.
+  5. The first administrator is created by running setupAdmin() inside the
+     Apps Script editor — there is no admin sign-up form here by design.
+
+  NOTE: the front end never stores passwords. Only a signed session token is
+  kept in localStorage; it expires after 12 hours and is invalidated
+  server-side when an account is deactivated or its password is reset.
+  =============================================================================
+-->
+
+<style>
+  /* ============================== DESIGN TOKENS ========================== */
+  :root{
+    --teal:#0e5f6e;
+    --teal-dark:#0a4653;
+    --teal-soft:#e6f2f4;
+    --ink:#12212b;
+    --muted:#4d6577;
+    --line:#d5e1e8;
+    --bg:#f4f8fa;
+    --white:#ffffff;
+    --amber:#a3540a;
+    --amber-soft:#fdf3e3;
+    --red:#a5211b;
+    --red-soft:#fbeceb;
+    --green:#1a6b3c;
+    --green-soft:#e8f4ec;
+    --radius:12px;
+    --radius-sm:8px;
+    --shadow:0 1px 2px rgba(16,42,56,.06), 0 10px 28px rgba(16,42,56,.08);
+    --font:"Segoe UI", "Noto Sans", system-ui, -apple-system, "Helvetica Neue", Arial,
+           "Noto Sans Ethiopic", "Nyala", "Abyssinica SIL", sans-serif;
+  }
+
+  /* ============================== BASE ================================== */
+  *,*::before,*::after{ box-sizing:border-box; }
+
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    font-family:var(--font);
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  h1,h2,h3,h4{ line-height:1.25; margin:0 0 .5rem; font-weight:700; letter-spacing:-.01em; }
+  p{ margin:0 0 1rem; }
+  a{ color:var(--teal); }
+  a:hover{ color:var(--teal-dark); }
+
+  /* Visible, high-contrast focus ring everywhere (keyboard users) */
+  :focus-visible{
+    outline:3px solid #0b6ea8;
+    outline-offset:2px;
+    border-radius:4px;
+  }
+
+  .skip-link{
+    position:absolute; left:-9999px; top:0; z-index:999;
+    background:var(--white); color:var(--teal-dark);
+    padding:.75rem 1.25rem; border-radius:0 0 var(--radius-sm) 0;
+    font-weight:700; box-shadow:var(--shadow);
+  }
+  .skip-link:focus{ left:0; }
+
+  .wrap{ width:100%; max-width:1180px; margin:0 auto; padding:0 1.25rem; }
+
+  /* ============================== HEADER ================================ */
+  .site-header{
+    background:linear-gradient(135deg, var(--teal-dark) 0%, var(--teal) 62%, #12798c 100%);
+    color:#fff;
+    padding:1.5rem 0 1.1rem;
+    border-bottom:4px solid #f0b429;
+  }
+
+  .header-inner{
+    display:flex; flex-wrap:wrap; gap:1.25rem;
+    align-items:center; justify-content:space-between;
+  }
+
+  .brand{ display:flex; gap:1rem; align-items:flex-start; flex:1 1 620px; min-width:0; }
+
+  .brand-mark{
+    flex:none;
+    width:58px; height:58px; border-radius:14px;
+    background:rgba(255,255,255,.14);
+    border:1.5px solid rgba(255,255,255,.4);
+    display:grid; place-items:center;
+    font-weight:800; font-size:.92rem; letter-spacing:.06em;
+    color:#fff;
+  }
+
+  .eyebrow{
+    margin:0 0 .3rem;
+    font-size:.78rem; font-weight:700;
+    letter-spacing:.14em; text-transform:uppercase;
+    color:#bfe6ee;
+  }
+
+  .site-title{
+    margin:0;
+    font-size:clamp(1rem, 1.9vw, 1.22rem);
+    font-weight:700;
+    line-height:1.45;
+    color:#fff;
+    letter-spacing:0;
+  }
+
+  .amharic{
+    display:inline-block;
+    margin-top:.25rem;
+    font-size:.98em;
+    font-weight:600;
+    color:#e9f7fa;
+    /* Ethriopic-capable stack is inherited, but be explicit for safety */
+    font-family:"Noto Sans Ethiopic", "Nyala", "Abyssinica SIL", "Ebrima", var(--font);
+  }
+
+  /* ============================== NAV =================================== */
+  .site-nav{ display:flex; flex-wrap:wrap; gap:.4rem; }
+
+  .site-nav a,
+  .site-nav button{
+    appearance:none;
+    font:inherit; font-weight:600; font-size:.9rem;
+    color:#fff;
+    background:rgba(255,255,255,.10);
+    border:1.5px solid rgba(255,255,255,.30);
+    padding:.5rem .9rem;
+    border-radius:999px;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .site-nav a:hover,
+  .site-nav button:hover{ background:rgba(255,255,255,.22); border-color:rgba(255,255,255,.65); color:#fff; }
+  .site-nav a[aria-current="page"]{ background:#fff; color:var(--teal-dark); border-color:#fff; }
+
+  /* ============================== LAYOUT ================================ */
+  main{ padding:2.25rem 0 3.5rem; }
+
+  .view[hidden]{ display:none !important; }
+
+  .panel{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:1.75rem;
+  }
+
+  .grid-2{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));
+    gap:1.5rem;
+    align-items:start;
+  }
+
+  /* ============================== HERO ================================== */
+  .hero{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:clamp(1.6rem, 3.5vw, 2.75rem);
+    margin-bottom:1.75rem;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0 0 auto 0; height:5px;
+    background:linear-gradient(90deg, var(--teal), #12798c 55%, #f0b429);
+  }
+  .hero h2{ font-size:clamp(1.35rem, 2.8vw, 1.9rem); }
+  .hero p{ color:var(--muted); max-width:68ch; font-size:1.03rem; }
+
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:.7rem; margin-top:1.4rem; }
+
+  /* ============================== BUTTONS =============================== */
+  .btn{
+    appearance:none;
+    font:inherit; font-weight:700; font-size:.95rem;
+    display:inline-flex; align-items:center; justify-content:center; gap:.45rem;
+    padding:.68rem 1.25rem;
+    border-radius:var(--radius-sm);
+    border:1.5px solid transparent;
+    cursor:pointer;
+    text-decoration:none;
+    transition:background .15s ease, border-color .15s ease, transform .05s ease;
+  }
+  .btn:active{ transform:translateY(1px); }
+  .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; }
+
+  .btn-primary{ background:var(--teal); color:#fff; }
+  .btn-primary:hover{ background:var(--teal-dark); color:#fff; }
+
+  .btn-outline{ background:var(--white); color:var(--teal-dark); border-color:var(--line); }
+  .btn-outline:hover{ background:var(--teal-soft); border-color:var(--teal); color:var(--teal-dark); }
+
+  .btn-danger{ background:var(--white); color:var(--red); border-color:#f0cdca; }
+  .btn-danger:hover{ background:var(--red-soft); }
+
+  .btn-ghost{
+    background:transparent; color:var(--teal-dark);
+    border-color:transparent; padding:.35rem .6rem; font-size:.85rem;
+    text-decoration:underline;
+  }
+  .btn-ghost:hover{ background:var(--teal-soft); }
+
+  .btn-sm{ padding:.35rem .7rem; font-size:.82rem; border-radius:6px; }
+
+  /* ============================== FORMS ================================= */
+  .form-head{ margin-bottom:1.4rem; }
+  .form-head h2{ font-size:1.4rem; }
+  .form-head p{ color:var(--muted); margin:0; font-size:.95rem; }
+
+  .field{ margin-bottom:1.05rem; }
+
+  .field label{
+    display:block;
+    font-weight:600; font-size:.88rem;
+    margin-bottom:.3rem;
+    color:#1c3644;
+  }
+
+  .req{ color:var(--red); margin-left:.15rem; }
+
+  .hint{ display:block; font-weight:400; font-size:.8rem; color:var(--muted); margin-top:.3rem; }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="password"],
+  select,
+  textarea{
+    width:100%;
+    font:inherit; font-size:.95rem;
+    color:var(--ink);
+    background:var(--white);
+    padding:.62rem .75rem;
+    border:1.5px solid #b9cbd6;
+    border-radius:var(--radius-sm);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+
+  input::placeholder{ color:#8ba0ae; }
+
+  input:focus, select:focus, textarea:focus{
+    border-color:var(--teal);
+    box-shadow:0 0 0 3px rgba(14,95,110,.16);
+    outline:none;
+  }
+
+  input[aria-invalid="true"], select[aria-invalid="true"]{
+    border-color:var(--red);
+    background:#fffafa;
+  }
+
+  .field-error{
+    margin:.3rem 0 0;
+    font-size:.82rem; font-weight:600;
+    color:var(--red);
+  }
+
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  @media (max-width:560px){ .field-row{ grid-template-columns:1fr; } }
+
+  .form-status{
+    margin:0 0 1.1rem;
+    padding:.75rem 1rem;
+    border-radius:var(--radius-sm);
+    font-size:.9rem; font-weight:600;
+    border:1px solid transparent;
+  }
+  .form-status[hidden]{ display:none; }
+  .form-status.is-error{ background:var(--red-soft); border-color:#f0cdca; color:var(--red); }
+  .form-status.is-ok{ background:var(--green-soft); border-color:#bfe0cc; color:var(--green); }
+  .form-status.is-info{ background:var(--teal-soft); border-color:#bfe0e6; color:var(--teal-dark); }
+
+  .form-foot{
+    margin-top:1.2rem; padding-top:1rem;
+    border-top:1px solid var(--line);
+    font-size:.9rem; color:var(--muted);
+    display:flex; flex-wrap:wrap; gap:.5rem; justify-content:space-between;
+  }
+
+  .narrow{ max-width:560px; margin:0 auto; }
+
+  /* ============================== CARDS ================================= */
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+    gap:1.25rem;
+    margin-bottom:1.75rem;
+  }
+
+  .card{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-left:5px solid var(--teal);
+    border-radius:var(--radius);
+    padding:1.25rem 1.35rem;
+    box-shadow:var(--shadow);
+  }
+  .card h3{ font-size:1rem; color:var(--teal-dark); margin-bottom:.4rem; }
+  .card p{ margin:0; font-size:.92rem; color:var(--muted); }
+
+  /* ============================== STATS ================================= */
+  .stat-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));
+    gap:.9rem;
+    margin-bottom:1.5rem;
+  }
+
+  .stat{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:.9rem 1rem;
+  }
+  .stat .stat-label{
+    display:block;
+    font-size:.72rem; font-weight:700;
+    letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:.25rem;
+  }
+  .stat .stat-value{
+    font-size:1.55rem; font-weight:800; color:var(--teal-dark);
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* ============================== TABLES ================================ */
+  .table-toolbar{
+    display:flex; flex-wrap:wrap; gap:.75rem;
+    align-items:center; justify-content:space-between;
+    margin-bottom:.9rem;
+  }
+  .table-toolbar h3{ margin:0; font-size:1.05rem; }
+  .table-toolbar input[type="search"]{ max-width:280px; }
+
+  .table-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius-sm); }
+
+  table{ width:100%; border-collapse:collapse; font-size:.88rem; background:var(--white); }
+
+  thead th{
+    text-align:left;
+    background:#eef4f7;
+    color:#1c3644;
+    font-size:.74rem; font-weight:700;
+    letter-spacing:.07em; text-transform:uppercase;
+    padding:.65rem .8rem;
+    border-bottom:1.5px solid var(--line);
+    white-space:nowrap;
+  }
+
+  tbody td{
+    padding:.65rem .8rem;
+    border-bottom:1px solid #eaf1f5;
+    vertical-align:middle;
+  }
+  tbody tr:last-child td{ border-bottom:0; }
+  tbody tr:hover{ background:#f7fbfc; }
+
+  .cell-empty{ color:var(--muted); font-style:italic; text-align:center; padding:1.75rem .8rem !important; }
+
+  .mono{ font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size:.86em; }
+
+  /* ============================== BADGES ================================ */
+  .badge{
+    display:inline-block;
+    font-size:.72rem; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase;
+    padding:.18rem .55rem;
+    border-radius:999px;
+    border:1px solid transparent;
+    white-space:nowrap;
+  }
+  .badge-unused{ background:var(--green-soft); color:var(--green); border-color:#bfe0cc; }
+  .badge-used{ background:#eef4f7; color:var(--muted); border-color:var(--line); }
+  .badge-revoked{ background:var(--red-soft); color:var(--red); border-color:#f0cdca; }
+  .badge-active{ background:var(--green-soft); color:var(--green); border-color:#bfe0cc; }
+  .badge-deactivated{ background:var(--amber-soft); color:var(--amber); border-color:#f0dcb8; }
+
+  /* ============================== CODE CHIPS ============================ */
+  .code-list{
+    display:flex; flex-wrap:wrap; gap:.5rem;
+    margin:1rem 0 0; padding:0; list-style:none;
+  }
+  .code-list li{
+    background:var(--teal-soft);
+    border:1.5px dashed #a9cfd7;
+    color:var(--teal-dark);
+    padding:.35rem .7rem;
+    border-radius:6px;
+    font-family:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-weight:700; font-size:.88rem;
+    letter-spacing:.04em;
+  }
+
+  /* ============================== SECTIONS ============================== */
+  .stack > * + *{ margin-top:1.75rem; }
+
+  .section-head{
+    display:flex; flex-wrap:wrap; gap:.75rem;
+    align-items:center; justify-content:space-between;
+    margin-bottom:1rem;
+  }
+  .section-head h2{ margin:0; font-size:1.2rem; }
+
+  /* ============================== PROFILE =============================== */
+  .profile-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:1rem 1.5rem;
+    margin:0;
+  }
+  .profile-grid dt{
+    font-size:.74rem; font-weight:700;
+    letter-spacing:.08em; text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:.15rem;
+  }
+  .profile-grid dd{ margin:0 0 .25rem; font-weight:600; word-break:break-word; }
+
+  /* ============================== FOOTER ================================ */
+  .site-footer{
+    background:var(--teal-dark);
+    color:#cfe6eb;
+    padding:1.75rem 0;
+    font-size:.86rem;
+  }
+  .site-footer p{ margin:0 0 .35rem; }
+  .site-footer strong{ color:#fff; }
+
+  /* ============================== UTIL ================================== */
+  .visually-hidden{
+    position:absolute !important;
+    width:1px; height:1px;
+    padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0);
+    white-space:nowrap; border:0;
+  }
+
+  @media (max-width:640px){
+    .panel{ padding:1.25rem; }
+    .header-inner{ flex-direction:column; align-items:stretch; }
+    .site-nav{ justify-content:flex-start; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- ============================ SITE HEADER ============================ -->
+<header class="site-header">
+  <div class="wrap header-inner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">PCN</div>
+      <div>
+        <p class="eyebrow">College of Medicine and Health Sciences · Wollo University</p>
+        <h1 class="site-title">
+          Pediatrics and Child Health Nursing Education and Service of College of Medicine and Health Sciences, Wollo University, found in Tertiary Care &amp; Teaching Hospital Cumpus
+          <span class="amharic" lang="am">(ልዕለ ህክምናና ማስተማሪያ ሆስፒታል)</span>
+        </h1>
+      </div>
+    </div>
+
+    <nav class="site-nav" aria-label="Main navigation">
+      <a href="#home" data-nav="home">Home</a>
+      <a href="#register" data-nav="register">Register</a>
+      <a href="#login" data-nav="login">Staff login</a>
+      <a href="#admin" data-nav="admin">Admin</a>
+      <button type="button" id="nav-signout" hidden>Sign out</button>
+    </nav>
+  </div>
+</header>
+
+<!-- ================================ MAIN =============================== -->
+<main id="main">
+  <div class="wrap">
+
+    <!-- ---------------------------- HOME ---------------------------- -->
+    <section class="view" id="view-home" aria-labelledby="home-heading">
+      <div class="hero">
+        <h2 id="home-heading">Education and service for the health of every child</h2>
+        <p>
+          The Pediatrics and Child Health Nursing Education and Service unit of the College of Medicine
+          and Health Sciences, Wollo University, operates from the Tertiary Care &amp; Teaching Hospital
+          Campus. The unit prepares competent pediatric nurses, supports evidence-based practice at the
+          bedside, and coordinates child-health services for the families we serve.
+        </p>
+        <p>
+          Staff members register once to receive a verified profile, and administrators issue the
+          single-use registration codes that make that verification possible.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#register">Register as staff</a>
+          <a class="btn btn-outline" href="#login">Staff sign in</a>
+        </div>
+      </div>
+
+      <div class="card-grid">
+        <article class="card">
+          <h3>Nursing education</h3>
+          <p>Clinical teaching, simulation and mentorship for pediatric nursing students and residents on the teaching hospital campus.</p>
+        </article>
+        <article class="card">
+          <h3>Clinical service</h3>
+          <p>Family-centred pediatric care delivered alongside the hospital's clinical teams, from newborn services through adolescent health.</p>
+        </article>
+        <article class="card">
+          <h3>Research and publication</h3>
+          <p>Staff publication profiles link directly to Google Scholar or ResearchGate so the unit's scholarly output stays visible and verifiable.</p>
+        </article>
+        <article class="card">
+          <h3>Verified staff directory</h3>
+          <p>Every account is tied to a registration code issued by an administrator, so the staff record reflects only authorised members of the unit.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- -------------------------- REGISTER -------------------------- -->
+    <section class="view" id="view-register" aria-labelledby="register-heading" hidden>
+      <div class="panel narrow">
+        <div class="form-head">
+          <h2 id="register-heading">Staff registration</h2>
+          <p>
+            You need a registration code issued by the unit administrator.
+            Each code can be redeemed once only.
+          </p>
+        </div>
+
+        <p class="form-status" id="register-status" role="status" hidden></p>
+
+        <form id="form-register" novalidate autocomplete="on">
+          <div class="field">
+            <label for="reg-fullName">Full name <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="reg-fullName" name="fullName" required maxlength="80"
+                   autocomplete="name" placeholder="e.g. Abebe Tesfaye Bekele">
+            <p class="field-error" data-error-for="fullName" hidden></p>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="reg-sex">Sex <span class="req" aria-hidden="true">*</span></label>
+              <select id="reg-sex" name="sex" required>
+                <option value="">Select…</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
+              <p class="field-error" data-error-for="sex" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="reg-employmentType">Employment type <span class="req" aria-hidden="true">*</span></label>
+              <select id="reg-employmentType" name="employmentType" required>
+                <option value="">Select…</option>
+                <option value="Permanent">Permanent</option>
+                <option value="Guest">Guest</option>
+              </select>
+              <p class="field-error" data-error-for="employmentType" hidden></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="reg-qualification">Educational qualification <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="reg-qualification" name="qualification" required maxlength="80"
+                   placeholder="e.g. MSc in Pediatric Nursing">
+            <p class="field-error" data-error-for="qualification" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-specialty">Specialty <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="reg-specialty" name="specialty" required maxlength="80"
+                   placeholder="e.g. Neonatal Nursing">
+            <p class="field-error" data-error-for="specialty" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-rank">Professional rank <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="reg-rank" name="rank" required maxlength="60"
+                   placeholder="e.g. Lecturer, Senior Nurse, Assistant Professor">
+            <p class="field-error" data-error-for="rank" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-publicationUrl">Publication profile URL <span class="req" aria-hidden="true">*</span></label>
+            <input type="url" id="reg-publicationUrl" name="publicationUrl" required maxlength="300"
+                   inputmode="url" placeholder="https://scholar.google.com/citations?user=…">
+            <span class="hint">A Google Scholar or ResearchGate profile address, starting with https://</span>
+            <p class="field-error" data-error-for="publicationUrl" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-email">Email address <span class="req" aria-hidden="true">*</span></label>
+            <input type="email" id="reg-email" name="email" required maxlength="120"
+                   autocomplete="email" placeholder="you@example.com">
+            <p class="field-error" data-error-for="email" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-phone">Phone number <span class="req" aria-hidden="true">*</span></label>
+            <input type="tel" id="reg-phone" name="phone" required maxlength="20"
+                   autocomplete="tel" placeholder="+251 9xx xxx xxx">
+            <p class="field-error" data-error-for="phone" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reg-registrationCode">Registration code <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="reg-registrationCode" name="registrationCode" required
+                   maxlength="24" autocapitalize="characters" spellcheck="false"
+                   class="mono" placeholder="PCN-XXXX-XXXX">
+            <span class="hint">Issued by the unit administrator. Case is not important.</span>
+            <p class="field-error" data-error-for="registrationCode" hidden></p>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="reg-password">Password <span class="req" aria-hidden="true">*</span></label>
+              <input type="password" id="reg-password" name="password" required
+                     minlength="8" maxlength="100" autocomplete="new-password">
+              <span class="hint">At least 8 characters, with letters and numbers.</span>
+              <p class="field-error" data-error-for="password" hidden></p>
+            </div>
+
+            <div class="field">
+              <label for="reg-confirmPassword">Confirm password <span class="req" aria-hidden="true">*</span></label>
+              <input type="password" id="reg-confirmPassword" name="confirmPassword" required
+                     minlength="8" maxlength="100" autocomplete="new-password">
+              <p class="field-error" data-error-for="confirmPassword" hidden></p>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="register-submit">Create my account</button>
+        </form>
+
+        <div class="form-foot">
+          <span>Already registered?</span>
+          <a href="#login">Sign in instead</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------- LOGIN --------------------------- -->
+    <section class="view" id="view-login" aria-labelledby="login-heading" hidden>
+      <div class="panel narrow">
+        <div class="form-head">
+          <h2 id="login-heading">Staff sign in</h2>
+          <p>Use the email address and password you registered with.</p>
+        </div>
+
+        <p class="form-status" id="login-status" role="status" hidden></p>
+
+        <form id="form-login" novalidate>
+          <div class="field">
+            <label for="login-email">Email address <span class="req" aria-hidden="true">*</span></label>
+            <input type="email" id="login-email" name="email" required maxlength="120" autocomplete="email">
+            <p class="field-error" data-error-for="email" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="login-password">Password <span class="req" aria-hidden="true">*</span></label>
+            <input type="password" id="login-password" name="password" required maxlength="100" autocomplete="current-password">
+            <p class="field-error" data-error-for="password" hidden></p>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="login-submit">Sign in</button>
+        </form>
+
+        <div class="form-foot">
+          <a href="#forgot">Forgot your password?</a>
+          <a href="#register">Register a new account</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------- FORGOT -------------------------- -->
+    <section class="view" id="view-forgot" aria-labelledby="forgot-heading" hidden>
+      <div class="panel narrow">
+        <div class="form-head">
+          <h2 id="forgot-heading">Forgot password</h2>
+          <p>
+            Enter your registered email address and we will send a single-use reset link.
+            The link expires after 30 minutes.
+          </p>
+        </div>
+
+        <p class="form-status" id="forgot-status" role="status" hidden></p>
+
+        <form id="form-forgot" novalidate>
+          <div class="field">
+            <label for="forgot-email">Email address <span class="req" aria-hidden="true">*</span></label>
+            <input type="email" id="forgot-email" name="email" required maxlength="120" autocomplete="email">
+            <p class="field-error" data-error-for="email" hidden></p>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="forgot-submit">Send reset link</button>
+        </form>
+
+        <div class="form-foot">
+          <a href="#login">Back to sign in</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------------------------- RESET --------------------------- -->
+    <section class="view" id="view-reset" aria-labelledby="reset-heading" hidden>
+      <div class="panel narrow">
+        <div class="form-head">
+          <h2 id="reset-heading">Set a new password</h2>
+          <p id="reset-target">Verifying your reset link…</p>
+        </div>
+
+        <p class="form-status" id="reset-status" role="status" hidden></p>
+
+        <form id="form-reset" novalidate hidden>
+          <div class="field">
+            <label for="reset-newPassword">New password <span class="req" aria-hidden="true">*</span></label>
+            <input type="password" id="reset-newPassword" name="newPassword" required
+                   minlength="8" maxlength="100" autocomplete="new-password">
+            <span class="hint">At least 8 characters, with letters and numbers.</span>
+            <p class="field-error" data-error-for="newPassword" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="reset-confirmPassword">Confirm new password <span class="req" aria-hidden="true">*</span></label>
+            <input type="password" id="reset-confirmPassword" name="confirmPassword" required
+                   minlength="8" maxlength="100" autocomplete="new-password">
+            <p class="field-error" data-error-for="confirmPassword" hidden></p>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="reset-submit">Update password</button>
+        </form>
+
+        <div class="form-foot">
+          <a href="#login">Back to sign in</a>
+          <a href="#forgot">Request a new link</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ------------------------ STAFF DASHBOARD --------------------- -->
+    <section class="view" id="view-staff" aria-labelledby="staff-heading" hidden>
+      <div class="panel">
+        <div class="section-head">
+          <h2 id="staff-heading">My staff profile</h2>
+          <button class="btn btn-outline btn-sm" type="button" id="staff-signout">Sign out</button>
+        </div>
+
+        <p class="form-status" id="staff-status" role="status" hidden></p>
+
+        <dl class="profile-grid" id="staff-profile"></dl>
+      </div>
+    </section>
+
+    <!-- ------------------------ ADMIN SIGN IN ----------------------- -->
+    <section class="view" id="view-admin-login" aria-labelledby="admin-login-heading" hidden>
+      <div class="panel narrow">
+        <div class="form-head">
+          <h2 id="admin-login-heading">Administrator sign in</h2>
+          <p>Administrator accounts are created inside the Apps Script editor. There is no self-service admin sign-up.</p>
+        </div>
+
+        <p class="form-status" id="admin-login-status" role="status" hidden></p>
+
+        <form id="form-admin-login" novalidate>
+          <div class="field">
+            <label for="admin-email">Administrator email <span class="req" aria-hidden="true">*</span></label>
+            <input type="email" id="admin-email" name="email" required maxlength="120" autocomplete="username">
+            <p class="field-error" data-error-for="email" hidden></p>
+          </div>
+
+          <div class="field">
+            <label for="admin-password">Password <span class="req" aria-hidden="true">*</span></label>
+            <input type="password" id="admin-password" name="password" required maxlength="100" autocomplete="current-password">
+            <p class="field-error" data-error-for="password" hidden></p>
+          </div>
+
+          <button class="btn btn-primary" type="submit" id="admin-login-submit">Sign in as administrator</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ------------------------ ADMIN DASHBOARD -------------------- -->
+    <section class="view" id="view-admin" aria-labelledby="admin-heading" hidden>
+      <div class="stack">
+
+        <div class="panel">
+          <div class="section-head">
+            <h2 id="admin-heading">Administrator dashboard</h2>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <button class="btn btn-outline btn-sm" type="button" id="admin-refresh">Refresh data</button>
+              <button class="btn btn-outline btn-sm" type="button" id="admin-signout">Sign out</button>
+            </div>
+          </div>
+
+          <p class="form-status" id="admin-status" role="status" hidden></p>
+
+          <div class="stat-grid" id="admin-stats">
+            <div class="stat"><span class="stat-label">Staff total</span><span class="stat-value" data-stat="staff.total">—</span></div>
+            <div class="stat"><span class="stat-label">Active</span><span class="stat-value" data-stat="staff.active">—</span></div>
+            <div class="stat"><span class="stat-label">Deactivated</span><span class="stat-value" data-stat="staff.deactivated">—</span></div>
+            <div class="stat"><span class="stat-label">Codes total</span><span class="stat-value" data-stat="codes.total">—</span></div>
+            <div class="stat"><span class="stat-label">Unused</span><span class="stat-value" data-stat="codes.unused">—</span></div>
+            <div class="stat"><span class="stat-label">Used</span><span class="stat-value" data-stat="codes.used">—</span></div>
+            <div class="stat"><span class="stat-label">Revoked</span><span class="stat-value" data-stat="codes.revoked">—</span></div>
+          </div>
+        </div>
+
+        <!-- Generate codes -->
+        <div class="panel">
+          <div class="section-head">
+            <h2>Generate registration codes</h2>
+          </div>
+          <p style="color:var(--muted);font-size:.93rem;margin-top:0">
+            Each code admits exactly one staff member and is marked used the moment it is redeemed.
+          </p>
+
+          <form id="form-generate-codes" novalidate>
+            <div class="field-row">
+              <div class="field">
+                <label for="gen-count">How many codes? <span class="req" aria-hidden="true">*</span></label>
+                <input type="text" id="gen-count" name="count" required inputmode="numeric"
+                       value="1" maxlength="2" placeholder="1–50">
+                <span class="hint">Between 1 and 50 per request.</span>
+                <p class="field-error" data-error-for="count" hidden></p>
+              </div>
+              <div class="field">
+                <label for="gen-note">Note (optional)</label>
+                <input type="text" id="gen-note" name="note" maxlength="120"
+                       placeholder="e.g. New intake, March 2025">
+                <p class="field-error" data-error-for="note" hidden></p>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit" id="gen-submit">Generate codes</button>
+          </form>
+
+          <ul class="code-list" id="generated-codes" hidden></ul>
+        </div>
+
+        <!-- Codes table -->
+        <div class="panel">
+          <div class="table-toolbar">
+            <h3>Registration codes</h3>
+            <input type="search" id="codes-search" placeholder="Search code, email or note…" aria-label="Search registration codes">
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption class="visually-hidden">All registration codes issued by administrators</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Code</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Created</th>
+                  <th scope="col">Used by</th>
+                  <th scope="col">Note</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="codes-body">
+                <tr><td class="cell-empty" colspan="6">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Staff table -->
+        <div class="panel">
+          <div class="table-toolbar">
+            <h3>Staff records</h3>
+            <input type="search" id="staff-search" placeholder="Search name, email, specialty…" aria-label="Search staff records">
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption class="visually-hidden">All registered staff members</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">Phone</th>
+                  <th scope="col">Rank</th>
+                  <th scope="col">Employment</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="staff-body">
+                <tr><td class="cell-empty" colspan="7">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<!-- =============================== FOOTER ============================== -->
+<footer class="site-footer">
+  <div class="wrap">
+    <p><strong>Pediatrics and Child Health Nursing Education and Service</strong></p>
+    <p>College of Medicine and Health Sciences, Wollo University — Tertiary Care &amp; Teaching Hospital Cumpus</p>
+    <p lang="am" class="amharic">ልዕለ ህክምናና ማስተማሪያ ሆስፒታል</p>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+/* =============================================================================
+ * ⚠️  THE ONLY LINE YOU MUST EDIT ⚠️
+ * Paste the Apps Script Web App /exec URL between the quotes.
+ * ========================================================================== */
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE";
+/* ========================================================================== */
+
+
+/* ============================== STATE ==================================== */
+const state = {
+  token: localStorage.getItem("pcn_token") || "",
+  role: localStorage.getItem("pcn_role") || "",   // "staff" | "admin"
+  staff: null,
+  codes: [],
+  staffList: [],
+  resetToken: ""
+};
+
+const VIEWS = [
+  "home", "register", "login", "forgot", "reset",
+  "staff", "admin-login", "admin"
+];
+
+const NAV_MAP = {
+  home: "home",
+  register: "register",
+  login: "login",
+  forgot: "login",
+  reset: "login",
+  staff: "login",
+  "admin-login": "admin",
+  admin: "admin"
+};
+
+/* ============================== DOM HELPERS ============================== */
+const $  = (sel, root) => (root || document).querySelector(sel);
+const $$ = (sel, root) => Array.prototype.slice.call((root || document).querySelectorAll(sel));
+
+/** Escape a value before it is inserted into innerHTML. */
+function esc(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+/** Format an ISO timestamp for display, falling back to the raw string. */
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return String(iso);
+  return d.toLocaleString(undefined, {
+    year: "numeric", month: "short", day: "2-digit",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
+/** Show a status message inside a .form-status element. */
+function setStatus(el, message, kind) {
+  if (!el) return;
+  if (!message) { el.hidden = true; el.textContent = ""; return; }
+  el.textContent = message;
+  el.className = "form-status is-" + (kind || "info");
+  el.hidden = false;
+}
+
+/* ---------------------------- field errors ---------------------------- */
+function clearFieldErrors(form) {
+  $$(".field-error", form).forEach(function (p) {
+    p.textContent = "";
+    p.hidden = true;
+  });
+  $$("[aria-invalid='true']", form).forEach(function (input) {
+    input.removeAttribute("aria-invalid");
+  });
+}
+
+function applyFieldErrors(form, errors) {
+  Object.keys(errors || {}).forEach(function (name) {
+    const input = form.elements[name];
+    if (input && input.setAttribute) input.setAttribute("aria-invalid", "true");
+    const box = form.querySelector('[data-error-for="' + name + '"]');
+    if (box) { box.textContent = errors[name]; box.hidden = false; }
+  });
+}
+
+/* Clear an individual field's error as soon as the user edits it. */
+function wireLiveFieldErrors(form) {
+  form.addEventListener("input", function (e) {
+    const t = e.target;
+    if (!t.name) return;
+    t.removeAttribute("aria-invalid");
+    const box = form.querySelector('[data-error-for="' + t.name + '"]');
+    if (box) { box.textContent = ""; box.hidden = true; }
+  });
+  form.addEventListener("change", function (e) {
+    const t = e.target;
+    if (!t.name) return;
+    t.removeAttribute("aria-invalid");
+    const box = form.querySelector('[data-error-for="' + t.name + '"]');
+    if (box) { box.textContent = ""; box.hidden = true; }
+  });
+}
+
+/* ============================== API CLIENT =============================== */
+async function api(action, payload) {
+  if (!API_URL || API_URL.indexOf("http") !== 0) {
+    throw new Error("API_URL is not configured. Paste your Apps Script /exec URL at the top of the script.");
+  }
+
+  const body = Object.assign({ action: action }, payload || {});
+
+  let res;
+  try {
+    res = await fetch(API_URL, {
+      method: "POST",
+      // text/plain keeps this a "simple" CORS request — no preflight, which
+      // Apps Script web apps cannot answer.
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(body),
+      redirect: "follow"
+    });
+  } catch (err) {
+    throw new Error("Could not reach the server. Check your connection and try again.");
+  }
+
+  if (!res.ok) {
+    throw new Error("The server responded with an error (" + res.status + "). Please try again.");
+  }
+
+  const text = await res.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch (err) {
+    throw new Error("The server returned an unexpected response. Please try again.");
+  }
+  return data;
+}
+
+/** Throw if the API reported failure; otherwise return the payload. */
+function unwrap(data) {
+  if (!data || data.success !== true) {
+    const err = new Error((data && data.error) || "Something went wrong. Please try again.");
+    err.fieldErrors = (data && data.fieldErrors) || null;
+    throw err;
+  }
+  return data;
+}
+
+/* ============================== ROUTING ================================== */
+function showView(name) {
+  if (VIEWS.indexOf(name) === -1) name = "home";
+
+  VIEWS.forEach(function (v) {
+    const section = $("#view-" + v);
+    if (section) section.hidden = (v !== name);
+  });
+
+  // Highlight the matching top-nav link
+  const navKey = NAV_MAP[name];
+  $$("[data-nav]").forEach(function (a) {
+    if (a.getAttribute("data-nav") === navKey) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
+  });
+
+  // Reflect the view in the hash so links are shareable and the back button works
+  const target = "#" + name;
+  if (window.location.hash !== target) {
+    history.replaceState(null, "", target);
+  }
+
+  // Move focus to the view heading for screen-reader and keyboard users
+  const heading = $("#view-" + name + " h2");
+  if (heading) {
+    heading.setAttribute("tabindex", "-1");
+    heading.focus({ preventScroll: true });
+  }
+
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function routeFromHash() {
+  const raw = (window.location.hash || "").replace(/^#/, "");
+  if (!raw) return;
+
+  if (raw === "admin") {
+    showView(state.role === "admin" && state.token ? "admin" : "admin-login");
+    return;
+  }
+  if (raw === "login") {
+    showView(state.role === "staff" && state.token ? "staff" : "login");
+    return;
+  }
+  showView(raw);
+}
+
+/* ============================== SESSION ================================== */
+function saveSession(token, role) {
+  state.token = token;
+  state.role = role;
+  localStorage.setItem("pcn_token", token);
+  localStorage.setItem("pcn_role", role);
+  $("#nav-signout").hidden = false;
+}
+
+function clearSession() {
+  state.token = "";
+  state.role = "";
+  state.staff = null;
+  localStorage.removeItem("pcn_token");
+  localStorage.removeItem("pcn_role");
+  $("#nav-signout").hidden = true;
+}
+
+function signOut(message) {
+  clearSession();
+  showView("home");
+  if (message) setStatus($("#login-status"), message, "info");
+}
+
+/* ============================== VALIDATION =============================== */
+/* Client-side mirror of the server rules. The server re-validates everything. */
+function isEmail(v) { return /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/.test(v) && v.length <= 120; }
+
+function isUrl(v) {
+  if (typeof v !== "string" || v.length > 300) return false;
+  const m = /^(https?):\/\/([^\s\/?#]+)([^\s]*)$/i.exec(v);
+  if (!m) return false;
+  const host = m[2].replace(/:\d+$/, "");
+  return /^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(host);
+}
+
+function isPhone(v) {
+  if (!/^[+()\d\s-]{7,20}$/.test(v)) return false;
+  const digits = v.replace(/\D/g, "");
+  return digits.length >= 7 && digits.length <= 15;
+}
+
+function passwordProblem(pw) {
+  if (typeof pw !== "string" || pw.length < 8) return "Password must be at least 8 characters long.";
+  if (pw.length > 100) return "Password must be at most 100 characters long.";
+  if (!/[A-Za-z]/.test(pw) || !/[0-9]/.test(pw)) return "Password must contain at least one letter and one number.";
+  return "";
+}
+
+/* ============================== REGISTER ================================= */
+function initRegisterForm() {
+  const form = $("#form-register");
+  const statusEl = $("#register-status");
+  const submit = $("#register-submit");
+  wireLiveFieldErrors(form);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+    setStatus(statusEl, "", null);
+
+    const v = {
+      fullName: form.fullName.value.trim(),
+      sex: form.sex.value,
+      qualification: form.qualification.value.trim(),
+      specialty: form.specialty.value.trim(),
+      rank: form.rank.value.trim(),
+      employmentType: form.employmentType.value,
+      publicationUrl: form.publicationUrl.value.trim(),
+      email: form.email.value.trim().toLowerCase(),
+      phone: form.phone.value.trim(),
+      registrationCode: form.registrationCode.value.trim().toUpperCase(),
+      password: form.password.value
+    };
+
+    /* ---- client-side checks ---- */
+    const errors = {};
+    if (v.fullName.length < 3 || v.fullName.length > 80) errors.fullName = "Enter your full name (3–80 characters).";
+    if (!v.sex) errors.sex = "Select your sex.";
+    if (v.qualification.length < 2) errors.qualification = "Enter your educational qualification.";
+    if (v.specialty.length < 2) errors.specialty = "Enter your specialty.";
+    if (!v.rank) errors.rank = "Enter your professional rank.";
+    if (!v.employmentType) errors.employmentType = "Select Permanent or Guest.";
+    if (!isUrl(v.publicationUrl)) errors.publicationUrl = "Enter a full https:// URL to your Google Scholar or ResearchGate profile.";
+    if (!isEmail(v.email)) errors.email = "Enter a valid email address.";
+    if (!isPhone(v.phone)) errors.phone = "Enter a valid phone number (7–15 digits).";
+    if (!/^[A-Z0-9-]{6,24}$/.test(v.registrationCode)) errors.registrationCode = "Enter the registration code issued by the administrator.";
+
+    const pwErr = passwordProblem(v.password);
+    if (pwErr) errors.password = pwErr;
+    if (form.confirmPassword.value !== v.password) errors.confirmPassword = "The two passwords do not match.";
+
+    if (Object.keys(errors).length) {
+      applyFieldErrors(form, errors);
+      setStatus(statusEl, "Please correct the highlighted fields.", "error");
+      const firstBad = form.querySelector("[aria-invalid='true']");
+      if (firstBad) firstBad.focus();
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Creating account…";
+
+    try {
+      const data = unwrap(await api("register", v));
+      setStatus(statusEl, data.message || "Registration complete. You can now sign in.", "ok");
+      form.reset();
+
+      // Pre-fill the login form and send the user there after a moment
+      $("#login-email").value = v.email;
+      $("#login-password").focus();
+      setTimeout(function () { showView("login"); }, 1400);
+    } catch (err) {
+      if (err.fieldErrors) applyFieldErrors(form, err.fieldErrors);
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Create my account";
+    }
+  });
+}
+
+/* ============================== LOGIN ==================================== */
+function initLoginForm() {
+  const form = $("#form-login");
+  const statusEl = $("#login-status");
+  const submit = $("#login-submit");
+  wireLiveFieldErrors(form);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+    setStatus(statusEl, "", null);
+
+    const email = form.email.value.trim().toLowerCase();
+    const password = form.password.value;
+    const errors = {};
+
+    if (!isEmail(email)) errors.email = "Enter a valid email address.";
+    if (!password) errors.password = "Enter your password.";
+
+    if (Object.keys(errors).length) {
+      applyFieldErrors(form, errors);
+      setStatus(statusEl, "Please correct the highlighted fields.", "error");
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Signing in…";
+
+    try {
+      const data = unwrap(await api("login", { email: email, password: password }));
+      saveSession(data.token, "staff");
+      state.staff = data.staff;
+      form.reset();
+      setStatus(statusEl, "", null);
+      renderStaffProfile(data.staff);
+      showView("staff");
+    } catch (err) {
+      if (err.fieldErrors) applyFieldErrors(form, err.fieldErrors);
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Sign in";
+    }
+  });
+}
+
+function renderStaffProfile(staff) {
+  const dl = $("#staff-profile");
+  if (!staff) { dl.innerHTML = ""; return; }
+
+  const rows = [
+    ["Full name", staff.fullName],
+    ["Sex", staff.sex],
+    ["Educational qualification", staff.qualification],
+    ["Specialty", staff.specialty],
+    ["Rank", staff.rank],
+    ["Employment type", staff.employmentType],
+    ["Email", staff.email],
+    ["Phone", staff.phone],
+    ["Account status", staff.status],
+    ["Registration code", staff.registrationCode],
+    ["Registered on", fmtDate(staff.createdAt)],
+    ["Last sign-in", fmtDate(staff.lastLoginAt)]
+  ];
+
+  let html = "";
+  rows.forEach(function (r) {
+    html += "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1] || "—") + "</dd></div>";
+  });
+
+  // The publication URL is shown as a real link
+  if (staff.publicationUrl) {
+    html += '<div><dt>Publication profile</dt><dd>' +
+      '<a href="' + esc(staff.publicationUrl) + '" target="_blank" rel="noopener noreferrer">' +
+      esc(staff.publicationUrl) + "</a></dd></div>";
+  }
+
+  dl.innerHTML = html;
+}
+
+/* ============================ FORGOT PASSWORD ============================ */
+function initForgotForm() {
+  const form = $("#form-forgot");
+  const statusEl = $("#forgot-status");
+  const submit = $("#forgot-submit");
+  wireLiveFieldErrors(form);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+    setStatus(statusEl, "", null);
+
+    const email = form.email.value.trim().toLowerCase();
+    if (!isEmail(email)) {
+      applyFieldErrors(form, { email: "Enter a valid email address." });
+      setStatus(statusEl, "Please correct the highlighted field.", "error");
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Sending…";
+
+    try {
+      const data = unwrap(await api("requestPasswordReset", { email: email }));
+      setStatus(statusEl, data.message, "ok");
+      form.reset();
+    } catch (err) {
+      if (err.fieldErrors) applyFieldErrors(form, err.fieldErrors);
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Send reset link";
+    }
+  });
+}
+
+/* ============================= RESET PASSWORD ============================ */
+function initResetForm() {
+  const form = $("#form-reset");
+  const statusEl = $("#reset-status");
+  const submit = $("#reset-submit");
+  const target = $("#reset-target");
+  wireLiveFieldErrors(form);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+    setStatus(statusEl, "", null);
+
+    const pw = form.newPassword.value;
+    const confirm = form.confirmPassword.value;
+    const errors = {};
+
+    const problem = passwordProblem(pw);
+    if (problem) errors.newPassword = problem;
+    if (confirm !== pw) errors.confirmPassword = "The two passwords do not match.";
+
+    if (Object.keys(errors).length) {
+      applyFieldErrors(form, errors);
+      setStatus(statusEl, "Please correct the highlighted fields.", "error");
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Updating…";
+
+    try {
+      const data = unwrap(await api("resetPassword", {
+        token: state.resetToken,
+        newPassword: pw
+      }));
+      setStatus(statusEl, data.message || "Your password has been updated.", "ok");
+      form.reset();
+      form.hidden = true;
+      target.textContent = "Password updated successfully.";
+
+      // Clear the ?reset= parameter and the token from memory
+      state.resetToken = "";
+      history.replaceState(null, "", window.location.pathname + window.location.search.replace(/([?&])reset=[^&]*/g, "").replace(/^&/, "?") + "#login");
+
+      setTimeout(function () { showView("login"); }, 1800);
+    } catch (err) {
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Update password";
+    }
+  });
+}
+
+/** Called on load when the URL carries ?reset=<token>. */
+async function beginResetFlow(token) {
+  state.resetToken = token;
+  const form = $("#form-reset");
+  const statusEl = $("#reset-status");
+  const target = $("#reset-target");
+
+  form.hidden = true;
+  setStatus(statusEl, "Checking your reset link…", "info");
+  target.textContent = "Verifying your reset link…";
+  showView("reset");
+
+  try {
+    const data = await api("verifyResetToken", { token: token });
+
+    if (!data.success || !data.valid) {
+      setStatus(statusEl, data.error || "This reset link is not valid.", "error");
+      target.textContent = "This reset link cannot be used.";
+      return;
+    }
+
+    setStatus(statusEl, "", null);
+    target.textContent = "Resetting the password for " + (data.email || "your account") +
+                         ". Choose a new password below.";
+    form.hidden = false;
+    form.newPassword.focus();
+  } catch (err) {
+    setStatus(statusEl, err.message, "error");
+    target.textContent = "This reset link cannot be used.";
+  }
+}
+
+/* ========================= ADMIN — SIGN IN =============================== */
+function initAdminLoginForm() {
+  const form = $("#form-admin-login");
+  const statusEl = $("#admin-login-status");
+  const submit = $("#admin-login-submit");
+  wireLiveFieldErrors(form);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+    setStatus(statusEl, "", null);
+
+    const email = form.email.value.trim().toLowerCase();
+    const password = form.password.value;
+    const errors = {};
+
+    if (!isEmail(email)) errors.email = "Enter a valid email address.";
+    if (!password) errors.password = "Enter the administrator password.";
+
+    if (Object.keys(errors).length) {
+      applyFieldErrors(form, errors);
+      setStatus(statusEl, "Please correct the highlighted fields.", "error");
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Signing in…";
+
+    try {
+      const data = unwrap(await api("adminLogin", { email: email, password: password }));
+      saveSession(data.token, "admin");
+      form.reset();
+      setStatus(statusEl, "", null);
+      showView("admin");
+      await loadAdminData();
+    } catch (err) {
+      if (err.fieldErrors) applyFieldErrors(form, err.fieldErrors);
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Sign in as administrator";
+    }
+  });
+}
+
+/* ========================= ADMIN — DASHBOARD ============================= */
+async function loadAdminData() {
+  const statusEl = $("#admin-status");
+  setStatus(statusEl, "Loading dashboard…", "info");
+
+  try {
+    const results = await Promise.all([
+      api("adminStats", { token: state.token }),
+      api("adminListCodes", { token: state.token }),
+      api("adminListStaff", { token: state.token })
+    ]);
+
+    // If any call reports an expired session, drop it and return to sign-in.
+    const authProblem = results.find(function (r) {
+      return !r.success && /sign in again|session/i.test(r.error || "");
+    });
+    if (authProblem) {
+      signOut("Your administrator session has expired. Please sign in again.");
+      showView("admin-login");
+      setStatus($("#admin-login-status"), "Your administrator session has expired. Please sign in again.", "error");
+      return;
+    }
+
+    const stats = unwrap(results[0]);
+    const codes = unwrap(results[1]);
+    const staff = unwrap(results[2]);
+
+    renderStats(stats);
+    state.codes = codes.codes || [];
+    state.staffList = staff.staff || [];
+    renderCodes();
+    renderStaffTable();
+    setStatus(statusEl, "", null);
+  } catch (err) {
+    setStatus(statusEl, err.message, "error");
+  }
+}
+
+function renderStats(stats) {
+  const set = function (key, value) {
+    const el = document.querySelector('[data-stat="' + key + '"]');
+    if (el) el.textContent = String(value == null ? "—" : value);
+  };
+  set("staff.total", stats.staff.total);
+  set("staff.active", stats.staff.active);
+  set("staff.deactivated", stats.staff.deactivated);
+  set("codes.total", stats.codes.total);
+  set("codes.unused", stats.codes.unused);
+  set("codes.used", stats.codes.used);
+  set("codes.revoked", stats.codes.revoked);
+}
+
+function renderCodes() {
+  const tbody = $("#codes-body");
+  const query = ($("#codes-search").value || "").trim().toLowerCase();
+
+  const rows = state.codes.filter(function (c) {
+    if (!query) return true;
+    return (c.code + " " + c.usedByEmail + " " + c.note + " " + c.status).toLowerCase().indexOf(query) !== -1;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td class="cell-empty" colspan="6">' +
+      (state.codes.length ? "No codes match your search." : "No registration codes yet. Generate some above.") +
+      "</td></tr>";
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (c) {
+    const statusClass = c.status === "unused" ? "badge-unused"
+                      : c.status === "revoked" ? "badge-revoked"
+                      : "badge-used";
+
+    let actions = "";
+    if (c.status === "unused") {
+      actions = '<button class="btn btn-danger btn-sm" type="button" data-code-action="revoked" data-code="' + esc(c.code) + '">Revoke</button>';
+    } else if (c.status === "revoked") {
+      actions = '<button class="btn btn-outline btn-sm" type="button" data-code-action="unused" data-code="' + esc(c.code) + '">Restore</button>';
+    } else {
+      actions = '<button class="btn btn-outline btn-sm" type="button" data-code-action="unused" data-code="' + esc(c.code) + '">Mark unused</button>';
+    }
+
+    return "<tr>" +
+      '<td class="mono">' + esc(c.code) + "</td>" +
+      '<td><span class="badge ' + statusClass + '">' + esc(c.status) + "</span></td>" +
+      "<td>" + esc(fmtDate(c.createdAt)) + "</td>" +
+      "<td>" + (c.usedByEmail ? esc(c.usedByEmail) + '<br><span style="color:var(--muted);font-size:.8em">' + esc(fmtDate(c.usedAt)) + "</span>" : "—") + "</td>" +
+      "<td>" + (c.note ? esc(c.note) : "—") + "</td>" +
+      "<td>" + actions + "</td>" +
+      "</tr>";
+  }).join("");
+}
+
+function renderStaffTable() {
+  const tbody = $("#staff-body");
+  const query = ($("#staff-search").value || "").trim().toLowerCase();
+
+  const rows = state.staffList.filter(function (s) {
+    if (!query) return true;
+    const haystack = [s.fullName, s.email, s.specialty, s.rank, s.qualification, s.phone, s.status].join(" ");
+    return haystack.toLowerCase().indexOf(query) !== -1;
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td class="cell-empty" colspan="7">' +
+      (state.staffList.length ? "No staff match your search." : "No staff members have registered yet.") +
+      "</td></tr>";
+    return;
+  }
+
+  tbody.innerHTML = rows.map(function (s) {
+    const isActive = s.status === "active";
+    const badge = isActive ? "badge-active" : "badge-deactivated";
+    const action = isActive
+      ? '<button class="btn btn-danger btn-sm" type="button" data-staff-action="deactivated" data-email="' + esc(s.email) + '">Deactivate</button>'
+      : '<button class="btn btn-outline btn-sm" type="button" data-staff-action="active" data-email="' + esc(s.email) + '">Reactivate</button>';
+
+    return "<tr>" +
+      "<td>" + esc(s.fullName) + "</td>" +
+      "<td>" + esc(s.email) + "</td>" +
+      "<td>" + esc(s.phone) + "</td>" +
+      "<td>" + esc(s.rank) + "</td>" +
+      "<td>" + esc(s.employmentType) + "</td>" +
+      '<td><span class="badge ' + badge + '">' + esc(s.status) + "</span></td>" +
+      "<td>" + action + "</td>" +
+      "</tr>";
+  }).join("");
+}
+
+/* ------------------------- admin: generate codes ---------------------- */
+function initGenerateCodesForm() {
+  const form = $("#form-generate-codes");
+  const statusEl = $("#admin-status");
+  const submit = $("#gen-submit");
+  const list = $("#generated-codes");
+  wireLiveFieldErrors(form);
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    clearFieldErrors(form);
+
+    const count = parseInt(form.count.value, 10);
+    if (!(count >= 1 && count <= 50)) {
+      applyFieldErrors(form, { count: "Choose between 1 and 50 codes." });
+      setStatus(statusEl, "Please correct the highlighted field.", "error");
+      return;
+    }
+
+    submit.disabled = true;
+    submit.textContent = "Generating…";
+
+    try {
+      const data = unwrap(await api("adminGenerateCodes", {
+        token: state.token,
+        count: count,
+        note: form.note.value.trim()
+      }));
+
+      setStatus(statusEl, data.message, "ok");
+
+      // Show the new codes prominently so they can be copied out
+      list.innerHTML = (data.codes || []).map(function (code) {
+        return "<li>" + esc(code) + "</li>";
+      }).join("");
+      list.hidden = !(data.codes && data.codes.length);
+
+      form.count.value = "1";
+      form.note.value = "";
+
+      await loadAdminData();
+      setStatus(statusEl, data.message, "ok");
+    } catch (err) {
+      if (err.fieldErrors) applyFieldErrors(form, err.fieldErrors);
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Generate codes";
+    }
+  });
+}
+
+/* --------------------- admin: table action delegation ----------------- */
+function initAdminTableActions() {
+  // Codes table
+  $("#codes-body").addEventListener("click", async function (e) {
+    const btn = e.target.closest("[data-code-action]");
+    if (!btn) return;
+
+    const code = btn.getAttribute("data-code");
+    const status = btn.getAttribute("data-code-action");
+    const statusEl = $("#admin-status");
+
+    btn.disabled = true;
+    try {
+      const data = unwrap(await api("adminSetCodeStatus", {
+        token: state.token, code: code, status: status
+      }));
+      await loadAdminData();
+      setStatus(statusEl, data.message, "ok");
+    } catch (err) {
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Staff table
+  $("#staff-body").addEventListener("click", async function (e) {
+    const btn = e.target.closest("[data-staff-action]");
+    if (!btn) return;
+
+    const email = btn.getAttribute("data-email");
+    const status = btn.getAttribute("data-staff-action");
+    const statusEl = $("#admin-status");
+
+    const verb = status === "active" ? "reactivate" : "deactivate";
+    if (!window.confirm("Are you sure you want to " + verb + " " + email + "?")) return;
+
+    btn.disabled = true;
+    try {
+      const data = unwrap(await api("adminSetStaffStatus", {
+        token: state.token, email: email, status: status
+      }));
+      await loadAdminData();
+      setStatus(statusEl, data.message, "ok");
+    } catch (err) {
+      setStatus(statusEl, err.message, "error");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // Live search filters
+  $("#codes-search").addEventListener("input", renderCodes);
+  $("#staff-search").addEventListener("input", renderStaffTable);
+}
+
+/* ============================== SESSION RESTORE ========================== */
+async function restoreSession() {
+  if (!state.token || !state.role) { clearSession(); return; }
+
+  try {
+    if (state.role === "staff") {
+      const data = await api("me", { token: state.token });
+      if (!data.success) { clearSession(); return; }
+      state.staff = data.staff;
+      renderStaffProfile(data.staff);
+    } else if (state.role === "admin") {
+      const data = await api("adminStats", { token: state.token });
+      if (!data.success) { clearSession(); return; }
+    }
+    $("#nav-signout").hidden = false;
+  } catch (err) {
+    // A network hiccup should not destroy a valid local session silently;
+    // only clear when the server explicitly rejects us.
+    if (/sign in again|session/i.test(err.message)) clearSession();
+  }
+}
+
+/* ============================== BOOTSTRAP =============================== */
+document.addEventListener("DOMContentLoaded", async function () {
+  /* ---- wire forms ---- */
+  initRegisterForm();
+  initLoginForm();
+  initForgotForm();
+  initResetForm();
+  initAdminLoginForm();
+  initGenerateCodesForm();
+  initAdminTableActions();
+
+  /* ---- sign-out buttons ---- */
+  function handleSignOut() {
+    if (state.role === "admin") {
+      signOut();
+      showView("admin-login");
+    } else {
+      signOut();
+    }
+  }
+  $("#nav-signout").addEventListener("click", handleSignOut);
+  $("#staff-signout").addEventListener("click", handleSignOut);
+  $("#admin-signout").addEventListener("click", handleSignOut);
+
+  /* ---- dashboard refresh ---- */
+  $("#admin-refresh").addEventListener("click", loadAdminData);
+
+  /* ---- restore any existing session ---- */
+  await restoreSession();
+
+  /* ---- password-reset links look like  index.html?reset=<token> ---- */
+  const params = new URLSearchParams(window.location.search);
+  const resetToken = params.get("reset");
+  if (resetToken) {
+    await beginResetFlow(resetToken);
+    return;
+  }
+
+  /* ---- honour the URL hash, otherwise show the landing page ---- */
+  if (window.location.hash) {
+    routeFromHash();
+  } else {
+    showView(state.role === "staff" && state.token ? "staff"
+           : state.role === "admin" && state.token ? "admin"
+           : "home");
+  }
+
+  window.addEventListener("hashchange", function () {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("reset")) return; // don't interrupt an in-progress reset
+    routeFromHash();
+  });
+});
+</script>
+</body>
+</html>
